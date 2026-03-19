@@ -1,0 +1,34 @@
+.cursor-dot,
+.cursor-ring,
+.cursor-trail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform;
+}
+
+.cursor-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--neon-green);
+  border-radius: 50%;
+  margin-left: -2.5px;
+  margin-top: -2.5px;
+  box-shadow: 0 0 8px 2px var(--neon-green);
+}
+
+.cursor-ring {
+  width: 28px;
+  height: 28px;
+  border: 1px dashed rgba(110, 231, 183, 0.45);
+  border-radius: 50%;
+  margin-left: -14px;
+  margin-top: -14px;
+}
+
+.cursor-trail {
+  background: var(--neon-green);
+  border-radius: 50%;
+}
