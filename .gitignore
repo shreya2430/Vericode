@@ -1,0 +1,16 @@
+# ===== IDE =====
+.idea/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*.swo
+*~
+.gitattributes
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
