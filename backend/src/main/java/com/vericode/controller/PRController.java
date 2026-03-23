@@ -1,14 +1,20 @@
 package com.vericode.controller;
 
+import com.vericode.checker.CheckResult;
+import com.vericode.checker.CheckerFactory;
+import com.vericode.checker.CodeChecker;
 import com.vericode.model.Language;
 import com.vericode.model.PullRequest;
 import com.vericode.model.PullRequestRequest;
+import com.vericode.model.ReviewTemplate;
 import com.vericode.repository.PullRequestRepository;
 import com.vericode.service.PullRequestBuilder;
+import com.vericode.service.ReviewTemplateRegistry;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +34,7 @@ public class PRController {
         try {
             Language language = Language.valueOf(request.getLanguage().toUpperCase());
 
+            // Builder pattern - construct PR step by step
             PullRequest pr = new PullRequestBuilder()
                     .title(request.getTitle())
                     .author(request.getAuthor())
@@ -37,7 +44,26 @@ public class PRController {
                     .build();
 
             PullRequest saved = pullRequestRepository.save(pr);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+
+            // Factory pattern - pick the right checker based on language
+            CodeChecker checker = CheckerFactory.createChecker(language);
+            CheckResult checkResult = checker.check(request.getCodeSnippet());
+
+            // Prototype pattern - clone a fresh review checklist for this PR
+            ReviewTemplate template = ReviewTemplateRegistry.getTemplate("STANDARD");
+
+            // Return PR + check results + review checklist
+            Map<String, Object> response = new HashMap<>();
+            response.put("pullRequest", saved);
+            response.put("checkResult", Map.of(
+                    "passed", checkResult.isPassed(),
+                    "violations", checkResult.getViolations(),
+                    "errorCount", checkResult.getErrorCount(),
+                    "warningCount", checkResult.getWarningCount()
+            ));
+            response.put("reviewChecklist", template.getChecklistItems());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
