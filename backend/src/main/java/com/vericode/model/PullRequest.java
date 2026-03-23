@@ -51,6 +51,9 @@ public class PullRequest {
         this.status = status;
     }
 
+    @Transient
+    private PRState state;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -58,7 +61,12 @@ public class PullRequest {
         if (this.status == null) {
             this.status = PRStatus.DRAFT;
         }
+        this.state = new DraftState();
+
     }
+
+    public PRState getState() { return state; }
+    public void setState(PRState state) { this.state = state; }
 
     @PreUpdate
     protected void onUpdate() {
