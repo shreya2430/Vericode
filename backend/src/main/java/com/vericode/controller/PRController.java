@@ -2,7 +2,7 @@ package com.vericode.controller;
 
 import com.vericode.model.Language;
 import com.vericode.model.PullRequest;
-import com.vericode.model.PRStatus;
+import com.vericode.model.PullRequestRequest;
 import com.vericode.repository.PullRequestRepository;
 import com.vericode.service.PullRequestBuilder;
 import org.springframework.http.HttpStatus;
@@ -24,16 +24,16 @@ public class PRController {
 
     // POST /api/pullrequests - Submit a new PR
     @PostMapping
-    public ResponseEntity<?> createPullRequest(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> createPullRequest(@RequestBody PullRequestRequest request) {
         try {
-            Language language = Language.valueOf(request.get("language").toUpperCase());
+            Language language = Language.valueOf(request.getLanguage().toUpperCase());
 
             PullRequest pr = new PullRequestBuilder()
-                    .title(request.get("title"))
-                    .author(request.get("author"))
+                    .title(request.getTitle())
+                    .author(request.getAuthor())
                     .language(language)
-                    .codeSnippet(request.get("codeSnippet"))
-                    .description(request.get("description"))
+                    .codeSnippet(request.getCodeSnippet())
+                    .description(request.getDescription())
                     .build();
 
             PullRequest saved = pullRequestRepository.save(pr);
@@ -58,6 +58,45 @@ public class PRController {
     public ResponseEntity<?> getPullRequestById(@PathVariable Long id) {
         return pullRequestRepository.findById(id)
                 .map(pr -> ResponseEntity.ok((Object) pr))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Pull request not found with id: " + id)));
+    }
+
+    // PUT /api/pullrequests/{id} - Update a PR
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePullRequest(@PathVariable Long id,
+                                               @RequestBody PullRequestRequest request) {
+        return pullRequestRepository.findById(id)
+                .map(existingPr -> {
+                    try {
+                        if (request.getTitle() != null) existingPr.setTitle(request.getTitle());
+                        if (request.getAuthor() != null) existingPr.setAuthor(request.getAuthor());
+                        if (request.getDescription() != null) existingPr.setDescription(request.getDescription());
+                        if (request.getCodeSnippet() != null) existingPr.setCodeSnippet(request.getCodeSnippet());
+                        if (request.getLanguage() != null) {
+                            existingPr.setLanguage(Language.valueOf(request.getLanguage().toUpperCase()));
+                        }
+
+                        PullRequest updated = pullRequestRepository.save(existingPr);
+                        return ResponseEntity.ok((Object) updated);
+
+                    } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest()
+                                .body((Object) Map.of("error", "Invalid language. Supported: JAVA, PYTHON, JAVASCRIPT"));
+                    }
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Pull request not found with id: " + id)));
+    }
+
+    // DELETE /api/pullrequests/{id} - Delete a PR
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePullRequest(@PathVariable Long id) {
+        return pullRequestRepository.findById(id)
+                .map(pr -> {
+                    pullRequestRepository.delete(pr);
+                    return ResponseEntity.ok((Object) Map.of("message", "Pull request deleted successfully"));
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Pull request not found with id: " + id)));
     }
