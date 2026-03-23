@@ -5,11 +5,14 @@
 ---
 
 ## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Design Patterns](#design-patterns)
-- [Team](#team)
+- [Vericode - A Code Review Platform](#vericode---a-code-review-platform)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Tech Stack](#tech-stack)
+  - [UML](#uml)
+  - [Design Patterns](#design-patterns)
+  - [Team](#team)
 
 ---
 
@@ -89,7 +92,7 @@ Every subsystem is grounded in a **Gang of Four design pattern**, demonstrating 
 Arundhati Bandopadhyaya - bandopadhyaya.a@northeastern.edu    
 Keya Goswami - goswami.ke@northeastern.edu  
 Shreya Wanisha - wanisha.s@northeastern.edu   
-TBD
+Maitri Pasale - pasale.m@northeastern.edu
 
 ---
 
