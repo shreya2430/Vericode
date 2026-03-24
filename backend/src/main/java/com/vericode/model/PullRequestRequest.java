@@ -8,11 +8,10 @@ import lombok.Setter;
 public class PullRequestRequest {
 
     private String title;
-    private String author;
+    private Long authorId;
     private String language;
     private String codeSnippet;
     private String description;
 
-    // Default constructor (needed for Jackson deserialization)
     public PullRequestRequest() {}
 }

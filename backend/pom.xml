@@ -15,7 +15,7 @@
 	<artifactId>vericode</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Vericode</name>
-	<description>Code Review Platform - CSYE 6300 Group 3</description>
+	<description>Collaborative Code Review Platform - CSYE 6300 Group 3</description>
 
 	<properties>
 		<java.version>17</java.version>
@@ -34,11 +34,17 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
-		<!-- H2 Database -->
+		<!-- MySQL -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- BCrypt for password hashing -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 
 		<!-- Lombok (reduce boilerplate) -->

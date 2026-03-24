@@ -7,7 +7,9 @@ import com.vericode.model.Language;
 import com.vericode.model.PullRequest;
 import com.vericode.model.PullRequestRequest;
 import com.vericode.model.ReviewTemplate;
+import com.vericode.model.User;
 import com.vericode.repository.PullRequestRepository;
+import com.vericode.repository.UserRepository;
 import com.vericode.service.PullRequestBuilder;
 import com.vericode.service.ReviewTemplateRegistry;
 import org.springframework.http.HttpStatus;
@@ -17,27 +19,38 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/pullrequests")
 public class PRController {
 
     private final PullRequestRepository pullRequestRepository;
+    private final UserRepository userRepository;
 
-    public PRController(PullRequestRepository pullRequestRepository) {
+    public PRController(PullRequestRepository pullRequestRepository,
+                        UserRepository userRepository) {
         this.pullRequestRepository = pullRequestRepository;
+        this.userRepository = userRepository;
     }
 
     // POST /api/pullrequests - Submit a new PR
     @PostMapping
     public ResponseEntity<?> createPullRequest(@RequestBody PullRequestRequest request) {
         try {
+            // Look up the author
+            Optional<User> authorOpt = userRepository.findById(request.getAuthorId());
+            if (authorOpt.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Author not found with id: " + request.getAuthorId()));
+            }
+
             Language language = Language.valueOf(request.getLanguage().toUpperCase());
 
-            // Builder pattern - construct PR step by step
+            // Builder pattern
             PullRequest pr = new PullRequestBuilder()
                     .title(request.getTitle())
-                    .author(request.getAuthor())
+                    .author(authorOpt.get())
                     .language(language)
                     .codeSnippet(request.getCodeSnippet())
                     .description(request.getDescription())
@@ -45,14 +58,13 @@ public class PRController {
 
             PullRequest saved = pullRequestRepository.save(pr);
 
-            // Factory pattern - pick the right checker based on language
+            // Factory pattern
             CodeChecker checker = CheckerFactory.createChecker(language);
             CheckResult checkResult = checker.check(request.getCodeSnippet());
 
-            // Prototype pattern - clone a fresh review checklist for this PR
+            // Prototype pattern
             ReviewTemplate template = ReviewTemplateRegistry.getTemplate("STANDARD");
 
-            // Return PR + check results + review checklist
             Map<String, Object> response = new HashMap<>();
             response.put("pullRequest", saved);
             response.put("checkResult", Map.of(
@@ -96,7 +108,6 @@ public class PRController {
                 .map(existingPr -> {
                     try {
                         if (request.getTitle() != null) existingPr.setTitle(request.getTitle());
-                        if (request.getAuthor() != null) existingPr.setAuthor(request.getAuthor());
                         if (request.getDescription() != null) existingPr.setDescription(request.getDescription());
                         if (request.getCodeSnippet() != null) existingPr.setCodeSnippet(request.getCodeSnippet());
                         if (request.getLanguage() != null) {

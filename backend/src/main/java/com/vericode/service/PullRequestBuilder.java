@@ -3,22 +3,23 @@ package com.vericode.service;
 import com.vericode.model.Language;
 import com.vericode.model.PRStatus;
 import com.vericode.model.PullRequest;
+import com.vericode.model.User;
 
 public class PullRequestBuilder {
 
     private String title;
-    private String author;
+    private User author;
     private Language language;
     private String codeSnippet;
     private String description;
-    private PRStatus status = PRStatus.DRAFT; // default
+    private PRStatus status = PRStatus.DRAFT;
 
     public PullRequestBuilder title(String title) {
         this.title = title;
         return this;
     }
 
-    public PullRequestBuilder author(String author) {
+    public PullRequestBuilder author(User author) {
         this.author = author;
         return this;
     }
@@ -47,7 +48,7 @@ public class PullRequestBuilder {
         if (title == null || title.isBlank()) {
             throw new IllegalStateException("Title is required");
         }
-        if (author == null || author.isBlank()) {
+        if (author == null) {
             throw new IllegalStateException("Author is required");
         }
         if (language == null) {

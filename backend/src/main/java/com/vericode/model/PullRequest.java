@@ -18,8 +18,9 @@ public class PullRequest {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private String author;
+    @ManyToOne
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -37,11 +38,15 @@ public class PullRequest {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private PRState state;
+
     // Default constructor (required by JPA)
     public PullRequest() {}
 
     // Constructor used by Builder
-    public PullRequest(String title, String author, Language language,
+    public PullRequest(String title, User author, Language language,
                        String codeSnippet, String description, PRStatus status) {
         this.title = title;
         this.author = author;
@@ -51,9 +56,6 @@ public class PullRequest {
         this.status = status;
     }
 
-    @Transient
-    private PRState state;
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -62,11 +64,7 @@ public class PullRequest {
             this.status = PRStatus.DRAFT;
         }
         this.state = new DraftState();
-
     }
-
-    public PRState getState() { return state; }
-    public void setState(PRState state) { this.state = state; }
 
     @PreUpdate
     protected void onUpdate() {

@@ -51,14 +51,14 @@ public class StatusChangeNotification {
     public void send(PullRequest pr) {
         String subject = String.format("PR #%d \"%s\" status update", pr.getId(), pr.getTitle());
         String message = String.format(
-            "Pull request \"%s\" by %s is now: %s",
-            pr.getTitle(),
-            pr.getAuthor(),
-            pr.getStatus()
+                "Pull request \"%s\" by %s is now: %s",
+                pr.getTitle(),
+                pr.getAuthor().getName(),
+                pr.getStatus()
         );
 
         // Delegate delivery entirely to the channel.
         // This class does not know or care whether it's sending email, WebSocket, etc.
-        channel.send(pr.getAuthor(), subject, message);
+        channel.send(pr.getAuthor().getEmail(), subject, message);
     }
 }

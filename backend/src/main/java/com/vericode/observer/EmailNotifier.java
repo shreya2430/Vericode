@@ -36,16 +36,15 @@ public class EmailNotifier implements PRStatusObserver {
             return;
         }
 
-        // In a real implementation, pr.getAuthor() would be looked up against
-        // a UserRepository to get the actual email address.
-        String recipient = pr.getAuthor();
+        String recipient = pr.getAuthor().getEmail();
+        String name      = pr.getAuthor().getName();
         String subject   = buildSubject(pr);
-        String body      = buildBody(pr);
+        String body      = buildBody(pr, name);
 
         // TODO: Replace with real delivery via JavaMailSender or SendGrid.
         System.out.println(String.format(
-            "[EMAIL] To: %s | Subject: %s | Body: %s",
-            recipient, subject, body
+                "[EMAIL] To: %s (%s) | Subject: %s | Body: %s",
+                recipient, name, subject, body
         ));
     }
 
@@ -55,29 +54,29 @@ public class EmailNotifier implements PRStatusObserver {
      */
     private boolean shouldEmail(PRStatus status) {
         return status == PRStatus.APPROVED
-            || status == PRStatus.CHANGES_REQUESTED
-            || status == PRStatus.MERGED;
+                || status == PRStatus.CHANGES_REQUESTED
+                || status == PRStatus.MERGED;
     }
 
     private String buildSubject(PullRequest pr) {
         return String.format("[Vericode] PR #%d \"%s\" - %s",
-            pr.getId(), pr.getTitle(), pr.getStatus());
+                pr.getId(), pr.getTitle(), pr.getStatus());
     }
 
-    private String buildBody(PullRequest pr) {
+    private String buildBody(PullRequest pr, String authorName) {
         return switch (pr.getStatus()) {
             case APPROVED -> String.format(
-                "Good news! Your pull request \"%s\" has been approved. You can now merge.",
-                pr.getTitle());
+                    "Hi %s! Your pull request \"%s\" has been approved. You can now merge.",
+                    authorName, pr.getTitle());
             case CHANGES_REQUESTED -> String.format(
-                "Your pull request \"%s\" has changes requested. Please review the feedback and update your code.",
-                pr.getTitle());
+                    "Hi %s, your pull request \"%s\" has changes requested. Please review the feedback and update your code.",
+                    authorName, pr.getTitle());
             case MERGED -> String.format(
-                "Your pull request \"%s\" has been successfully merged.",
-                pr.getTitle());
+                    "Hi %s! Your pull request \"%s\" has been successfully merged.",
+                    authorName, pr.getTitle());
             default -> String.format(
-                "Your pull request \"%s\" status has changed to: %s",
-                pr.getTitle(), pr.getStatus());
+                    "Hi %s, your pull request \"%s\" status has changed to: %s",
+                    authorName, pr.getTitle(), pr.getStatus());
         };
     }
 }
