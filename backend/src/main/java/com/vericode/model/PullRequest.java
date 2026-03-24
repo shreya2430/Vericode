@@ -23,7 +23,7 @@ public class PullRequest {
     private User author;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "`language`", nullable = false)
     private Language language;
 
     @Column(columnDefinition = "TEXT", nullable = false)
@@ -32,7 +32,7 @@ public class PullRequest {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "`status`", nullable = false)
     private PRStatus status;
 
     private LocalDateTime createdAt;
