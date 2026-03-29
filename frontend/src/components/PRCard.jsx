@@ -50,7 +50,9 @@ function PRCard({ pr, index = 0 }) {
       </div>
 
       <div className="pr-card__meta">
-        <span className="pr-card__author">{pr.author}</span>
+        <span className="pr-card__author">
+          {typeof pr.author === 'object' ? pr.author?.username : pr.author}
+        </span>
         <span className={`tag ${LANGUAGE_COLOR[pr.language]}`}>{pr.language}</span>
         <span className="pr-card__date">{formatDate(pr.createdAt)}</span>
       </div>
@@ -62,7 +64,7 @@ PRCard.propTypes = {
   pr: PropTypes.shape({
     id:        PropTypes.number.isRequired,
     title:     PropTypes.string.isRequired,
-    author:    PropTypes.string.isRequired,
+    author:    PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
     language:  PropTypes.string.isRequired,
     status:    PropTypes.string.isRequired,
     createdAt: PropTypes.string,

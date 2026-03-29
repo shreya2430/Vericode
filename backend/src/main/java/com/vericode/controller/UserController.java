@@ -89,6 +89,43 @@ public class UserController {
                         .body(Map.of("error", "User not found")));
     }
 
+    // PUT /api/users/{id} - Update name and/or username
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    String newName = request.get("name");
+                    String newUsername = request.get("username");
+
+                    if (newName == null || newName.isBlank()) {
+                        return ResponseEntity.badRequest()
+                                .body((Object) Map.of("error", "Name cannot be blank"));
+                    }
+                    if (newUsername == null || newUsername.isBlank()) {
+                        return ResponseEntity.badRequest()
+                                .body((Object) Map.of("error", "Username cannot be blank"));
+                    }
+
+                    if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body((Object) Map.of("error", "Username already taken"));
+                    }
+
+                    user.setName(newName);
+                    user.setUsername(newUsername);
+                    User saved = userRepository.save(user);
+
+                    return ResponseEntity.ok((Object) Map.of(
+                            "id", saved.getId(),
+                            "username", saved.getUsername(),
+                            "name", saved.getName(),
+                            "email", saved.getEmail()
+                    ));
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found")));
+    }
+
     // GET /api/users - Get all users (for reviewer dropdown)
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
