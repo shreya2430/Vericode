@@ -28,6 +28,7 @@ public class RejectCommand implements ReviewCommand{
 
     @Override
     public String getDescription() {
-        return reviewer + " requested changes on PR #" + pr.getId();
+        return reviewer + " requested changes on PR #" + pr.getId()
+                + " by " + pr.getAuthor().getUsername();
     }
 }

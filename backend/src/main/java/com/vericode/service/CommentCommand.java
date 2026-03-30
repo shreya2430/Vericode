@@ -33,6 +33,7 @@ public class CommentCommand implements ReviewCommand{
     @Override
     public String getDescription() {
         return author + " commented on PR #" + pr.getId()
+                + " (author: " + pr.getAuthor().getUsername() + ")"  
                 + " at line " + lineNumber + ": " + content;
     }
 }

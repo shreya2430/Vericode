@@ -66,6 +66,19 @@ public class PullRequest {
         this.state = new DraftState();
     }
 
+    public PRState getState() {
+        if (state == null) {
+            state = switch (this.status) {
+                case DRAFT             -> new DraftState();
+                case IN_REVIEW         -> new InReviewState();
+                case CHANGES_REQUESTED -> new ChangesRequestedState();
+                case APPROVED          -> new ApprovedState();
+                case MERGED            -> new MergedState();
+            };
+        }
+        return state;
+    }
+
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
