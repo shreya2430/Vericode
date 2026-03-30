@@ -28,6 +28,6 @@ public class ApproveCommand implements ReviewCommand{
 
     @Override
     public String getDescription() {
-        return reviewer + " approved PR #" + pr.getId();
+        return reviewer + " approved PR #" + pr.getId() + " by " + pr.getAuthor().getUsername();
     }
 }

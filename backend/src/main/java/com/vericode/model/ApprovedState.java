@@ -11,9 +11,10 @@ public class ApprovedState implements PRState{
     }
     @Override
     public void requestChanges(PullRequest pr, String reviewer) {
-        pr.setStatus(PRStatus.CHANGES_REQUESTED);
-        pr.setState(new ChangesRequestedState());
-        System.out.println(reviewer + " requested changes on approved PR #" + pr.getId());
+       // pr.setStatus(PRStatus.CHANGES_REQUESTED);
+       // pr.setState(new ChangesRequestedState());
+        throw new IllegalStateException("PR is already approved. It can only be merged.");
+
     }
     @Override
     public void merge(PullRequest pr, String reviewer) {

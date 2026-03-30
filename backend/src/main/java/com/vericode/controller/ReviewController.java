@@ -24,7 +24,6 @@ public class ReviewController {
     private final PullRequestRepository prRepo;
     private final CommandHistory commandHistory;
 
-    @Autowired
     public ReviewController(PullRequestRepository prRepo,
                             CommandHistory commandHistory) {
         this.prRepo = prRepo;
