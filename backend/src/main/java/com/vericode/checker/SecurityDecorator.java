@@ -2,6 +2,11 @@ package com.vericode.checker;
 
 public class SecurityDecorator extends CheckerDecorator {
 
+    private final CheckRulePool.CheckRule passwordRule = CheckRulePool.getRule("SECURITY", "HardcodedPassword");
+    private final CheckRulePool.CheckRule apiKeyRule = CheckRulePool.getRule("SECURITY", "HardcodedApiKey");
+    private final CheckRulePool.CheckRule sqlInjectionRule = CheckRulePool.getRule("SECURITY", "SqlInjection");
+    private final CheckRulePool.CheckRule evalRule = CheckRulePool.getRule("SECURITY", "EvalUsage");
+
     public SecurityDecorator(CodeChecker wrapped) {
         super(wrapped);
     }
@@ -14,23 +19,24 @@ public class SecurityDecorator extends CheckerDecorator {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].toLowerCase();
 
-            // Hardcoded credentials
             if (line.contains("password") && line.contains("=") && !line.contains("getpassword")) {
-                result.addViolation(new Violation("SECURITY", "Possible hardcoded password", i + 1, "ERROR"));
+                result.addViolation(new Violation(passwordRule.getCategory(),
+                        passwordRule.getMessage(), i + 1, passwordRule.getSeverity()));
             }
 
             if (line.matches(".*api[_-]?key\\s*=\\s*[\"'].*[\"'].*")) {
-                result.addViolation(new Violation("SECURITY", "Possible hardcoded API key", i + 1, "ERROR"));
+                result.addViolation(new Violation(apiKeyRule.getCategory(),
+                        apiKeyRule.getMessage(), i + 1, apiKeyRule.getSeverity()));
             }
 
-            // SQL injection risk
             if (line.contains("\"select") && line.contains("\" +")) {
-                result.addViolation(new Violation("SECURITY", "Possible SQL injection - use parameterized queries", i + 1, "ERROR"));
+                result.addViolation(new Violation(sqlInjectionRule.getCategory(),
+                        sqlInjectionRule.getMessage(), i + 1, sqlInjectionRule.getSeverity()));
             }
 
-            // Eval usage
             if (line.contains("eval(")) {
-                result.addViolation(new Violation("SECURITY", "Use of eval() is a security risk", i + 1, "ERROR"));
+                result.addViolation(new Violation(evalRule.getCategory(),
+                        evalRule.getMessage(), i + 1, evalRule.getSeverity()));
             }
         }
 

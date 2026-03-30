@@ -1,9 +1,3 @@
-/**
- * Node.js microservice for JavaScript code analysis using ESLint.
- * Runs on port 5002. Receives JS code via POST /check,
- * writes it to a temp file, runs ESLint, and returns violations as JSON.
- */
-
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
