@@ -19,3 +19,9 @@ Thumbs.db
 *.mv.db
 *.trace.db
 data/
+# ===== Node =====
+node_modules/
+
+# ===== Python =====
+__pycache__/
+*.pyc

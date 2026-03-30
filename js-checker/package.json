@@ -1,0 +1,13 @@
+{
+  "name": "vericode-js-checker",
+  "version": "1.0.0",
+  "description": "Node.js microservice for JavaScript code analysis using ESLint",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "eslint": "^8.57.0",
+    "express": "^4.21.0"
+  }
+}
