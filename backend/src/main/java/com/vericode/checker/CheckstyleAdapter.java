@@ -16,14 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-/**
- * Adapter Pattern: wraps Checkstyle's file-based API to fit our CodeChecker interface.
- *
- * Checkstyle expects a File to analyze. Our system passes code as a String.
- * This adapter bridges the gap by writing the code to a temp file, running
- * Checkstyle programmatically, collecting violations via an AuditListener,
- * then cleaning up the temp file.
- */
 public class CheckstyleAdapter implements CodeChecker {
 
     private static final String CONFIG_PATH = "/checkstyle-config.xml";
