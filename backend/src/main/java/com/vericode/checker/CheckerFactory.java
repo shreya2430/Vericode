@@ -4,14 +4,26 @@ import com.vericode.model.Language;
 
 public class CheckerFactory {
 
-    // Creates a fully decorated checker for the given language
+    /**
+     * Creates a fully decorated checker for the given language.
+     *
+     * Uses the Strategy pattern to pick the right checker based on language,
+     * then wraps it in the Decorator chain: Security -> Style -> Lint
+     */
     public static CodeChecker createChecker(Language language) {
-        BaseChecker base = new BaseChecker(language);
+        CheckStrategy strategy = createStrategy(language);
+        CodeChecker base = new StrategyCheckerAdapter(strategy);
 
-        // Wrap in decorator chain: Security -> Style -> Lint -> Base
-        // Execution order: Base runs first, then Security, then Style, then Lint
         return new LintDecorator(
                 new StyleDecorator(
                         new SecurityDecorator(base)));
+    }
+
+    private static CheckStrategy createStrategy(Language language) {
+        return switch (language) {
+            case JAVA -> new JavaCheckStrategy();
+            case PYTHON -> new PythonCheckStrategy();
+            case JAVASCRIPT -> new JSCheckStrategy();
+        };
     }
 }
