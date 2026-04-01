@@ -7,12 +7,52 @@
 ## Table of Contents
 - [Vericode - A Code Review Platform](#vericode---a-code-review-platform)
   - [Table of Contents](#table-of-contents)
+  - [Running the Project](#running-the-project)
   - [Overview](#overview)
   - [Features](#features)
   - [Tech Stack](#tech-stack)
   - [UML](#uml)
   - [Design Patterns](#design-patterns)
   - [Team](#team)
+
+---
+
+## Running the Project
+
+Start all four services, each in a separate terminal.
+
+**1. Backend** (Java 17 + Maven required)
+```bash
+    cd backend
+    mvn spring-boot:run
+    # Runs on http://localhost:8080
+```
+
+**2. Python Microservice** (Flask + Pylint required)
+```bash
+    cd python-checker
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install flask pylint
+    python app.py
+    # Runs on http://localhost:5001
+```
+
+**3. JavaScript Microservice** (Node.js required)
+```bash
+    cd js-checker
+    npm install
+    npm start
+    # Runs on http://localhost:5002
+```
+
+**4. Frontend** (Node.js required)
+```bash
+    cd frontend
+    npm install
+    npm run dev
+    # Runs on http://localhost:5173
+```
 
 ---
 
