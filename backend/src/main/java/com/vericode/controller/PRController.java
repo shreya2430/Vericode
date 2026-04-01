@@ -12,6 +12,11 @@ import com.vericode.repository.PullRequestRepository;
 import com.vericode.repository.UserRepository;
 import com.vericode.service.PullRequestBuilder;
 import com.vericode.service.ReviewTemplateRegistry;
+import com.vericode.validation.AuthorValidationHandler;
+import com.vericode.validation.CodeSnippetValidationHandler;
+import com.vericode.validation.LanguageValidationHandler;
+import com.vericode.validation.PRValidationHandler;
+import com.vericode.validation.TitleValidationHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,55 +39,56 @@ public class PRController {
         this.userRepository = userRepository;
     }
 
+    private PRValidationHandler buildValidationChain() {
+        PRValidationHandler title = new TitleValidationHandler();
+        PRValidationHandler code = new CodeSnippetValidationHandler();
+        PRValidationHandler author = new AuthorValidationHandler(userRepository);
+        PRValidationHandler language = new LanguageValidationHandler();
+        title.setNext(code).setNext(author).setNext(language);
+        return title;
+    }
+
     // POST /api/pullrequests - Submit a new PR
     @PostMapping
     public ResponseEntity<?> createPullRequest(@RequestBody PullRequestRequest request) {
-        try {
-            // Look up the author
-            Optional<User> authorOpt = userRepository.findById(request.getAuthorId());
-            if (authorOpt.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Author not found with id: " + request.getAuthorId()));
-            }
-
-            Language language = Language.valueOf(request.getLanguage().toUpperCase());
-
-            // Builder pattern
-            PullRequest pr = new PullRequestBuilder()
-                    .title(request.getTitle())
-                    .author(authorOpt.get())
-                    .language(language)
-                    .codeSnippet(request.getCodeSnippet())
-                    .description(request.getDescription())
-                    .build();
-
-            PullRequest saved = pullRequestRepository.save(pr);
-
-            // Factory pattern
-            CodeChecker checker = CheckerFactory.createChecker(language);
-            CheckResult checkResult = checker.check(request.getCodeSnippet());
-
-            // Prototype pattern
-            ReviewTemplate template = ReviewTemplateRegistry.getTemplate("STANDARD");
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("pullRequest", saved);
-            response.put("checkResult", Map.of(
-                    "passed", checkResult.isPassed(),
-                    "violations", checkResult.getViolations(),
-                    "errorCount", checkResult.getErrorCount(),
-                    "warningCount", checkResult.getWarningCount()
-            ));
-            response.put("reviewChecklist", template.getChecklistItems());
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Invalid language. Supported: JAVA, PYTHON, JAVASCRIPT"));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        // Chain of Responsibility - validate before processing
+        Optional<String> validationError = buildValidationChain().validate(request);
+        if (validationError.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", validationError.get()));
         }
+
+        User author = userRepository.findById(request.getAuthorId()).get();
+        Language language = Language.valueOf(request.getLanguage().toUpperCase());
+
+        // Builder pattern
+        PullRequest pr = new PullRequestBuilder()
+                .title(request.getTitle())
+                .author(author)
+                .language(language)
+                .codeSnippet(request.getCodeSnippet())
+                .description(request.getDescription())
+                .build();
+
+        PullRequest saved = pullRequestRepository.save(pr);
+
+        // Factory pattern
+        CodeChecker checker = CheckerFactory.createChecker(language);
+        CheckResult checkResult = checker.check(request.getCodeSnippet());
+
+        // Prototype pattern
+        ReviewTemplate template = ReviewTemplateRegistry.getTemplate("STANDARD");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("pullRequest", saved);
+        response.put("checkResult", Map.of(
+                "passed", checkResult.isPassed(),
+                "violations", checkResult.getViolations(),
+                "errorCount", checkResult.getErrorCount(),
+                "warningCount", checkResult.getWarningCount()
+        ));
+        response.put("reviewChecklist", template.getChecklistItems());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // GET /api/pullrequests - Get all PRs
