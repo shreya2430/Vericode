@@ -20,7 +20,6 @@ The server starts at `http://localhost:8080`.
 ## Verify
 
 - **API:** `GET http://localhost:8080/api/pullrequests`
-- **H2 Console:** `http://localhost:8080/h2-console`
-    - JDBC URL: `jdbc:h2:file:./data/vericodedb`
-    - Username: `sa`
-    - Password: *(leave blank)*
+- **Database:** MySQL running on `localhost:3306`
+    - Database: `vericodedb`
+    - Configure credentials in `src/main/resources/application.properties`

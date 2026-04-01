@@ -51,7 +51,7 @@ Every subsystem is grounded in a **Gang of Four design pattern**, demonstrating 
 | API | REST (JSON), Spring MVC |
 | Frontend | React 18, HTML5, CSS3 |
 | Build Tool | Maven |
-| Database | H2 (in-memory) |
+| Database | MySQL |
 | Python Microservice | Flask, Pylint |
 | JavaScript Microservice | Node.js, Express, ESLint |
 | Version Control | Git, GitHub |

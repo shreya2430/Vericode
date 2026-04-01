@@ -328,7 +328,7 @@ Purpose: `PRListPage`, `PRDetailPage`, and `PRSubmitPage` are the three core vie
 | Technology | Role |
 |---|---|
 | Git / GitHub | Version control, collaboration |
-| H2 (optional) | In-memory database for local testing without MySQL |
+| MySQL | Relational database for persistent data storage |
 
 ---
 
