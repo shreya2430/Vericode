@@ -8,8 +8,6 @@ import com.vericode.service.CommandHistory;
 import com.vericode.service.CommentCommand;
 import com.vericode.service.RejectCommand;
 import com.vericode.service.ReviewCommand;
-import com.vericode.service.ReviewSessionManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -134,7 +132,7 @@ public class ReviewController {
         try {
             String author = body.get("author");
             String content = body.get("content");
-            int lineNumber = Integer.parseInt(body.get("lineNumber"));
+            String lineNumberStr = body.get("lineNumber");
 
             if (author == null || author.isBlank())
                 return ResponseEntity.badRequest()
@@ -142,6 +140,11 @@ public class ReviewController {
             if (content == null || content.isBlank())
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Comment content is required"));
+            if (lineNumberStr == null)
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "lineNumber is required"));
+
+            int lineNumber = Integer.parseInt(lineNumberStr);
 
             PullRequest pr = prRepo.findById(prId)
                     .orElseThrow(() -> new RuntimeException("PR not found: " + prId));
@@ -150,6 +153,7 @@ public class ReviewController {
             ReviewCommand cmd = new CommentCommand(pr, review, author, lineNumber, content);
             cmd.execute();
             commandHistory.push(cmd);
+            prRepo.save(pr);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "message", cmd.getDescription()

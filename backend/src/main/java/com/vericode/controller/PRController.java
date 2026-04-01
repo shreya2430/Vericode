@@ -57,7 +57,8 @@ public class PRController {
             return ResponseEntity.badRequest().body(Map.of("error", validationError.get()));
         }
 
-        User author = userRepository.findById(request.getAuthorId()).get();
+        User author = userRepository.findById(request.getAuthorId())
+                .orElseThrow(() -> new IllegalStateException("Author not found"));
         Language language = Language.valueOf(request.getLanguage().toUpperCase());
 
         // Builder pattern
