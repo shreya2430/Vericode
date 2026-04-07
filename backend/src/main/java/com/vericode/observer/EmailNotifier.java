@@ -2,34 +2,32 @@ package com.vericode.observer;
 
 import com.vericode.model.PullRequest;
 import com.vericode.model.PRStatus;
+import com.vericode.notification.EmailChannel;
 import org.springframework.stereotype.Component;
 
 /**
  * Observer Pattern: Concrete Observer #2: Email Notification.
  *
- * Sends email notifications when a PR status changes. Only fires for statuses
- * that are meaningful to the author: APPROVED, CHANGES_REQUESTED, and MERGED.
- * DRAFT and IN_REVIEW are internal transitions and do not warrant an email.
+ * Reacts to PR status changes and sends emails for statuses that require
+ * author awareness: APPROVED, CHANGES_REQUESTED, and MERGED. DRAFT and
+ * IN_REVIEW are internal transitions and do not warrant an email.
  *
- * WHY @COMPONENT:
- * Spring automatically adds this to List<PRStatusObserver> in NotificationService
- * at startup. No manual registration needed.
+ * Delivery path:
+ *   NotificationService.notifyAll(pr)
+ *     → EmailNotifier.onStatusChange(pr)      [Observer: filters and builds the message]
+ *       → EmailChannel.send(email, ...)        [Bridge: sends via JavaMailSender → Mailtrap]
  *
- * WHAT TO CHANGE LATER:
- * 1. Add spring-boot-starter-mail to pom.xml
- * 2. Configure mail host/port/credentials in application.properties
- * 3. Inject JavaMailSender and replace System.out.println with real sends.
- * The filtering logic and method signature stay exactly the same.
+ * The recipient passed to EmailChannel is the PR author's email address.
  */
 @Component
 public class EmailNotifier implements PRStatusObserver {
 
-    /**
-     * Fires when any PR status changes. Checks whether the new status warrants
-     * an email, then simulates sending it to the PR author.
-     *
-     * @param pr the updated PullRequest (read-only). Do not modify it here.
-     */
+    private final EmailChannel emailChannel;
+
+    public EmailNotifier(EmailChannel emailChannel) {
+        this.emailChannel = emailChannel;
+    }
+
     @Override
     public void onStatusChange(PullRequest pr) {
         if (!shouldEmail(pr.getStatus())) {
@@ -37,15 +35,10 @@ public class EmailNotifier implements PRStatusObserver {
         }
 
         String recipient = pr.getAuthor().getEmail();
-        String name      = pr.getAuthor().getName();
         String subject   = buildSubject(pr);
-        String body      = buildBody(pr, name);
+        String body      = buildBody(pr, pr.getAuthor().getName());
 
-        // TODO: Replace with real delivery via JavaMailSender or SendGrid.
-        System.out.println(String.format(
-                "[EMAIL] To: %s (%s) | Subject: %s | Body: %s",
-                recipient, name, subject, body
-        ));
+        emailChannel.send(recipient, subject, body);
     }
 
     /**
