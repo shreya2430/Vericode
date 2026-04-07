@@ -1,36 +1,41 @@
 package com.vericode.notification;
 
+import org.springframework.stereotype.Component;
+
 /**
- * Bridge Pattern: Concrete Implementor #2: In-app delivery.
+ * Bridge Pattern: Concrete Implementor #2: In-app delivery via SSE.
  *
- * Handles sending notifications that appear inside the Vericode UI as a
- * banner or toast. Currently simulated with System.out.println.
+ * Delivers notifications to the user's active browser tab by pushing a
+ * Server-Sent Event through SseEmitterRegistry. The frontend NotificationContext
+ * listens on /api/notifications/stream and passes received events to
+ * NotificationBanner for display.
  *
- * NOTE: This is separate from InAppNotifier (Observer pattern).
+ * If the user has no active SSE connection (not logged in or tab closed),
+ * the send is silently skipped — acceptable behaviour for ephemeral toasts.
+ *
+ * NOTE: This class is separate from InAppNotifier (Observer pattern).
  * InAppNotifier reacts to status changes and decides what message to build.
  * InAppChannel is purely responsible for the act of delivering it in-app.
  * The Observer layer decides what to say; the Bridge layer decides how to send it.
- *
- * WHAT TO CHANGE LATER:
- * Wire this to the SSE or WebSocket endpoint that feeds NotificationContext.jsx
- * on the frontend. The method signature stays the same.
  */
+@Component
 public class InAppChannel implements NotificationChannel {
 
+    private final SseEmitterRegistry sseRegistry;
+
+    public InAppChannel(SseEmitterRegistry sseRegistry) {
+        this.sseRegistry = sseRegistry;
+    }
+
     /**
-     * Simulates delivering an in-app notification to the given recipient.
+     * Pushes a notification to the browser tab of the given recipient.
      *
-     * @param recipient the username of the user to notify.
-     * @param subject   a short summary shown in the notification banner.
-     * @param message   the full notification text.
+     * @param recipient the PR author's username (used as the SSE emitter map key)
+     * @param subject   short label shown in the notification toast
+     * @param message   full notification body
      */
     @Override
     public void send(String recipient, String subject, String message) {
-        // TODO: Replace with a push to SSE or WebSocket endpoint feeding
-        // frontend/src/context/NotificationContext.jsx
-        System.out.println(String.format(
-            "[IN-APP CHANNEL] To: %s | Subject: %s | Message: %s",
-            recipient, subject, message
-        ));
+        sseRegistry.send(recipient, subject, message);
     }
 }

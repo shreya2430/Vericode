@@ -1,48 +1,43 @@
 package com.vericode.observer;
 
 import com.vericode.model.PullRequest;
+import com.vericode.notification.InAppChannel;
 import org.springframework.stereotype.Component;
 
 /**
  * Observer Pattern: Concrete Observer #1: In-App Notification.
  *
- * Delivers in-app notifications when a PR status changes. "In-app" means the
- * user sees a banner or toast inside the Vericode UI without needing to check email.
+ * Reacts to PR status changes and delivers in-app toast notifications by
+ * delegating to InAppChannel (Bridge pattern). This is the connection point
+ * between Observer and Bridge: the Observer decides what to say, the Bridge
+ * decides how to send it.
  *
- * CURRENT STATE:
- * Delivery is simulated with System.out.println. The real implementation will push
- * a message to the frontend via NotificationContext (scaffolded at
- * frontend/src/context/NotificationContext.jsx) once WebSocket or SSE is wired up.
+ * Delivery path:
+ *   NotificationService.notifyAll(pr)
+ *     → InAppNotifier.onStatusChange(pr)       [Observer: builds the message]
+ *       → InAppChannel.send(username, ...)      [Bridge: routes to SSE registry]
+ *         → SseEmitterRegistry.send(username)   [pushes event to browser tab]
  *
- * WHY @COMPONENT:
- * Spring automatically adds this to List<PRStatusObserver> in NotificationService
- * at startup. No manual registration needed.
- *
- * WHAT TO CHANGE LATER:
- * Replace System.out.println with a WebSocket broadcast or SSE push.
- * The method signature stays the same only the body changes.
+ * The recipient passed to InAppChannel is the PR author's username, which is
+ * the key used by SseEmitterRegistry to find the active SSE connection.
  */
 @Component
 public class InAppNotifier implements PRStatusObserver {
 
-    /**
-     * Fires when any PR status changes. Builds a human-readable in-app message
-     * using the PR's id, title, author, and new status.
-     *
-     * @param pr the updated PullRequest (read-only). Do not modify it here.
-     */
+    private final InAppChannel inAppChannel;
+
+    public InAppNotifier(InAppChannel inAppChannel) {
+        this.inAppChannel = inAppChannel;
+    }
+
     @Override
     public void onStatusChange(PullRequest pr) {
+        String subject = String.format("PR #%d status update", pr.getId());
         String message = String.format(
-            "[IN-APP] PR #%d \"%s\" by %s is now: %s",
-            pr.getId(),
-            pr.getTitle(),
-            pr.getAuthor(),
-            pr.getStatus()
+                "Your pull request \"%s\" is now: %s",
+                pr.getTitle(),
+                pr.getStatus()
         );
-
-        // TODO: Replace with real delivery, WebSocket broadcast or SSE push to
-        // frontend/src/context/NotificationContext.jsx
-        System.out.println(message);
+        inAppChannel.send(pr.getAuthor().getUsername(), subject, message);
     }
 }
