@@ -122,7 +122,7 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 
 ## 2. System Architecture
 
-![System Architecture Diagram](docs/assets/DesPat_SysArc_M3.png)
+![System Architecture Diagram](assets/DesPat_SysArc_M3.png)
 
 Vericode is a multi-tier web application organized into five major runtime components: a React frontend, a Spring Boot backend, a MySQL database, a Python microservice, and a Node.js microservice. All external communication passes through the backend; the frontend never contacts the microservices directly.
 
@@ -202,7 +202,7 @@ Browser -> `POST /api/reviews/{id}/approve` -> `ReviewController` -> `ReviewFaca
 - `InAppNotifier` -> `InAppChannel` -> `SseEmitterRegistry` -> open SSE connection -> browser toast notification
 - `WebSocketNotifier` -> `WebSocketChannel` -> `SimpMessagingTemplate` -> `/topic/pr-updates` -> all connected browser tabs update in real time.
 
-![Notification Flow Diagram](docs/assets/M3_Notification.png)
+![Notification Flow Diagram](assets/M3_Notification.png)
 
 ---
 
