@@ -36,3 +36,4 @@ logs/
 # ===== Spring Boot =====
 application-local.properties
 local.properties
+src/main/resources/local.properties

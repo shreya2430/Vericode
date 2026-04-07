@@ -1,58 +1,81 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Client } from '@stomp/stompjs';
 import { useUser } from './UserContext';
 
-// Provides in-app notification state fed by a live SSE connection.
-// Mirrors InAppNotifier (Observer) → InAppChannel (Bridge) → SseEmitterRegistry on the backend.
+// Provides in-app notification state fed by two real-time connections:
+//   1. SSE  → targets the logged-in user (InAppNotifier → InAppChannel → SseEmitterRegistry)
+//   2. STOMP WebSocket → broadcasts to all connected users (WebSocketNotifier → WebSocketChannel)
 const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const { user } = useUser();
   const esRef = useRef(null);
+  const stompRef = useRef(null);
 
   useEffect(() => {
-    // Close any existing connection first
+    // Close existing connections first
     if (esRef.current) {
       esRef.current.close();
       esRef.current = null;
     }
+    if (stompRef.current) {
+      stompRef.current.deactivate();
+      stompRef.current = null;
+    }
 
-    // No user = no SSE connection needed
     if (!user) return;
 
+    // --- SSE: targeted in-app notifications for this user ---
     const es = new EventSource(`/api/notifications/stream?username=${user.username}`);
     esRef.current = es;
 
     es.addEventListener('notification', (e) => {
-      const id = Date.now() + Math.random();
-      setNotifications((prev) => [...prev, { id, message: e.data }]);
-      // Auto-dismiss after 5 seconds
-      setTimeout(() => dismiss(id), 5000);
+      addNotification(e.data);
     });
 
     es.onerror = () => {
-      // EventSource reconnects automatically on error; just clean up the ref
-      // if the connection was explicitly closed (readyState CLOSED = 2)
       if (es.readyState === EventSource.CLOSED) {
         esRef.current = null;
       }
     };
 
+    // --- STOMP WebSocket: broadcast updates to all connected users ---
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
+    const client = new Client({
+      brokerURL: wsUrl,
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe('/topic/pr-updates', (frame) => {
+          const payload = JSON.parse(frame.body);
+          addNotification(payload.message);
+        });
+      },
+    });
+    client.activate();
+    stompRef.current = client;
+
     return () => {
       es.close();
       esRef.current = null;
+      client.deactivate();
+      stompRef.current = null;
     };
   }, [user]);
+
+  function addNotification(message) {
+    const id = Date.now() + Math.random();
+    setNotifications((prev) => [...prev, { id, message }]);
+    setTimeout(() => dismiss(id), 5000);
+  }
 
   function dismiss(id) {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }
 
-  // Manual notify() kept for local use (e.g. showing frontend-only messages)
+  // Manual notify() kept for local frontend-only messages
   function notify(message) {
-    const id = Date.now() + Math.random();
-    setNotifications((prev) => [...prev, { id, message }]);
-    setTimeout(() => dismiss(id), 5000);
+    addNotification(message);
   }
 
   return (
