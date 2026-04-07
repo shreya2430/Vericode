@@ -1,4 +1,4 @@
-# Vericode – Design Document (Milestone 3)
+# Vericode - Design Document (Milestone 3)
 
 ---
 
@@ -11,21 +11,21 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 ### Observer
 **Problem solved:** When a pull request changes status, multiple independent systems (email, in-app toast, WebSocket broadcast) need to react. Hardcoding these reactions into the review logic would tightly couple unrelated concerns and make adding new channels invasive.
 
-**How it is applied:** `PRStatusObserver` is a Java interface that declares a single `onStatusChange(PullRequest)` method. Three concrete observers — `EmailNotifier`, `InAppNotifier`, and `WebSocketNotifier` — each implement this interface as Spring-managed components. `NotificationService` holds an auto-wired list of all registered observers and fans out each status change to all of them. Adding a new notification channel requires only creating a new `@Component` that implements the interface; nothing else changes.
+**How it is applied:** `PRStatusObserver` is a Java interface that declares a single `onStatusChange(PullRequest)` method. Three concrete observers -- `EmailNotifier`, `InAppNotifier`, and `WebSocketNotifier` -- each implement this interface as Spring-managed components. `NotificationService` holds an auto-wired list of all registered observers and fans out each status change to all of them. Adding a new notification channel requires only creating a new `@Component` that implements the interface; nothing else changes.
 
 ---
 
 ### Bridge
 **Problem solved:** The Observer layer knows _what_ happened (a PR was approved, merged, etc.) but should not know _how_ to deliver that information. Email delivery, SSE streaming, and STOMP broadcasting are three entirely different mechanisms that need to evolve independently of the notification types.
 
-**How it is applied:** `NotificationChannel` is a Java interface declaring `send(recipient, subject, message)`. Three concrete implementors — `EmailChannel`, `InAppChannel`, and `WebSocketChannel` — each encapsulate one delivery mechanism. Each Observer delegates to its corresponding Channel. This Bridge separates the "what to say" (Observer) from "how to say it" (Channel), so either hierarchy can change without affecting the other.
+**How it is applied:** `NotificationChannel` is a Java interface declaring `send(recipient, subject, message)`. Three concrete implementors -- `EmailChannel`, `InAppChannel`, and `WebSocketChannel` -- each encapsulate one delivery mechanism. Each Observer delegates to its corresponding Channel. This Bridge separates the "what to say" (Observer) from "how to say it" (Channel), so either hierarchy can change without affecting the other.
 
 ---
 
 ### Facade
 **Problem solved:** HTTP controllers should not coordinate repositories, command execution, history management, and notification broadcasting. Exposing this logic directly to controllers would scatter business rules across the HTTP layer.
 
-**How it is applied:** `ReviewFacade` provides a single entry point for all review operations: `submit`, `approve`, `requestChanges`, `merge`, `comment`, and `undo`. Internally it loads the pull request, executes the appropriate Command, saves the result, and triggers notifications — in that order, every time. Controllers call one method on the Facade and are completely shielded from the coordination logic underneath.
+**How it is applied:** `ReviewFacade` provides a single entry point for all review operations: `submit`, `approve`, `requestChanges`, `merge`, `comment`, and `undo`. Internally it loads the pull request, executes the appropriate Command, saves the result, and triggers notifications -- in that order, every time. Controllers call one method on the Facade and are completely shielded from the coordination logic underneath.
 
 ---
 
@@ -37,9 +37,9 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 ---
 
 ### State
-**Problem solved:** A pull request moves through a strict lifecycle (Draft → In Review → Approved or Changes Requested → Merged). Enforcing valid transitions with if-else chains in the PR model becomes error-prone as states multiply.
+**Problem solved:** A pull request moves through a strict lifecycle (Draft -> In Review -> Approved or Changes Requested -> Merged). Enforcing valid transitions with if-else chains in the PR model becomes error-prone as states multiply.
 
-**How it is applied:** `PRState` is an interface with methods for each lifecycle event (`submit`, `approve`, `requestChanges`, `merge`). Five concrete state classes — `DraftState`, `InReviewState`, `ChangesRequestedState`, `ApprovedState`, `MergedState` — each implement only the transitions legal from that state and throw exceptions for invalid ones (e.g., merging a Draft). The `PullRequest` entity holds a current state reference and delegates all lifecycle calls to it.
+**How it is applied:** `PRState` is an interface with methods for each lifecycle event (`submit`, `approve`, `requestChanges`, `merge`). Five concrete state classes -- `DraftState`, `InReviewState`, `ChangesRequestedState`, `ApprovedState`, `MergedState` -- each implement only the transitions legal from that state and throw exceptions for invalid ones (e.g., merging a Draft). The `PullRequest` entity holds a current state reference and delegates all lifecycle calls to it.
 
 ---
 
@@ -102,21 +102,21 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 ### Singleton
 **Problem solved:** A global map of which reviewer is currently assigned to which PR must be consistent across all threads. Multiple instances of this manager would produce conflicting session data.
 
-**How it is applied:** `ReviewSessionManager` has a private constructor and a static `getInstance()` method. It uses a `ConcurrentHashMap<Long, String>` (PR ID → reviewer ID) to guarantee thread-safe access. All services that check or update session state call through the same instance.
+**How it is applied:** `ReviewSessionManager` has a private constructor and a static `getInstance()` method. It uses a `ConcurrentHashMap<Long, String>` (PR ID -> reviewer ID) to guarantee thread-safe access. All services that check or update session state call through the same instance.
 
 ---
 
 ### Chain of Responsibility
 **Problem solved:** Pull request submissions must pass multiple independent validations (title length, non-empty code, existing author, valid language). Hardcoding all checks in the controller mixes concerns and makes it difficult to add or reorder validators.
 
-**How it is applied:** `PRValidationHandler` is an abstract class that holds a reference to the next handler. Four concrete handlers — `TitleValidationHandler`, `CodeSnippetValidationHandler`, `AuthorValidationHandler`, `LanguageValidationHandler` — each validate one concern and delegate to the next if they pass. The chain is assembled in `PRController` before any processing begins. The first failure short-circuits the chain and returns an error to the caller.
+**How it is applied:** `PRValidationHandler` is an abstract class that holds a reference to the next handler. Four concrete handlers -- `TitleValidationHandler`, `CodeSnippetValidationHandler`, `AuthorValidationHandler`, `LanguageValidationHandler` -- each validate one concern and delegate to the next if they pass. The chain is assembled in `PRController` before any processing begins. The first failure short-circuits the chain and returns an error to the caller.
 
 ---
 
 ### Template Method
-**Problem solved:** The PR review lifecycle follows a fixed skeleton of steps (load → validate → transition state → save → notify) that should not vary across different review actions.
+**Problem solved:** The PR review lifecycle follows a fixed skeleton of steps (load -> validate -> transition state -> save -> notify) that should not vary across different review actions.
 
-**How it is applied:** `ReviewFacade` acts as the template, enforcing the invariant call sequence for every review action. The variable parts — the specific state transition and command executed — are supplied by the concrete `ReviewCommand` implementations. The skeleton is fixed; only the step implementations change.
+**How it is applied:** `ReviewFacade` acts as the template, enforcing the invariant call sequence for every review action. The variable parts -- the specific state transition and command executed -- are supplied by the concrete `ReviewCommand` implementations. The skeleton is fixed; only the step implementations change.
 
 ---
 
@@ -132,7 +132,7 @@ Vericode is a multi-tier web application organized into five major runtime compo
 
 The frontend is a single-page application that communicates with the backend through three channels:
 
-- **REST over HTTP** (via Axios): used for all CRUD operations — submitting pull requests, loading PR lists and details, performing review actions.
+- **REST over HTTP** (via Axios): used for all CRUD operations -- submitting pull requests, loading PR lists and details, performing review actions.
 - **Server-Sent Events (SSE)**: used for targeted, per-user in-app notifications. On login, the frontend opens a persistent `EventSource` connection to `/api/notifications/stream?username={username}`. When the backend pushes an event over this connection, the `NotificationContext` adds it to a toast queue and `NotificationBanner` displays it.
 - **STOMP over WebSocket** (via SockJS + STOMP.js): used for real-time broadcast updates. The frontend subscribes to `/topic/pr-updates`. When any PR changes status, all connected browser tabs receive the update without polling.
 
@@ -194,13 +194,13 @@ This microservice handles static analysis of JavaScript code. It exposes a singl
 ### Data Flow
 
 **Submitting a new PR:**
-Browser → `POST /api/pullrequests` → `PRController` → validation chain → `CheckerFactory` (selects strategy) → language microservice (Python 5001 or JS 5002 via HTTP, or Checkstyle library for Java) → `CheckResult` stored on entity → `PullRequestRepository.save()` → response to browser.
+Browser -> `POST /api/pullrequests` -> `PRController` -> validation chain -> `CheckerFactory` (selects strategy) -> language microservice (Python 5001 or JS 5002 via HTTP, or Checkstyle library for Java) -> `CheckResult` stored on entity -> `PullRequestRepository.save()` -> response to browser.
 
 **Performing a review action (e.g., approve):**
-Browser → `POST /api/reviews/{id}/approve` → `ReviewController` → `ReviewFacade.approve()` → load PR from repository → execute `ApproveCommand` (state transition) → save PR → `NotificationService.notifyAll()` → three observers in parallel:
-- `EmailNotifier` → `EmailChannel` → JavaMailSender → Mailtrap SMTP → email delivered
-- `InAppNotifier` → `InAppChannel` → `SseEmitterRegistry` → open SSE connection → browser toast notification
-- `WebSocketNotifier` → `WebSocketChannel` → `SimpMessagingTemplate` → `/topic/pr-updates` → all connected browser tabs update in real time.
+Browser -> `POST /api/reviews/{id}/approve` -> `ReviewController` -> `ReviewFacade.approve()` -> load PR from repository -> execute `ApproveCommand` (state transition) -> save PR -> `NotificationService.notifyAll()` -> three observers in parallel:
+- `EmailNotifier` -> `EmailChannel` -> JavaMailSender -> Mailtrap SMTP -> email delivered
+- `InAppNotifier` -> `InAppChannel` -> `SseEmitterRegistry` -> open SSE connection -> browser toast notification
+- `WebSocketNotifier` -> `WebSocketChannel` -> `SimpMessagingTemplate` -> `/topic/pr-updates` -> all connected browser tabs update in real time.
 
 ![Notification Flow Diagram](docs/assets/M3_Notification.png)
 
@@ -210,7 +210,7 @@ Browser → `POST /api/reviews/{id}/approve` → `ReviewController` → `ReviewF
 
 | Component | Purpose | Design Pattern(s) |
 |---|---|---|
-| `ReviewFacade` | Single entry point for all review operations; enforces load → execute → save → notify ordering | Facade, Template Method |
+| `ReviewFacade` | Single entry point for all review operations; enforces load -> execute -> save -> notify ordering | Facade, Template Method |
 | `NotificationService` | Fans out PR status changes to all registered observer instances | Observer |
 | `EmailNotifier` | Reacts to status changes and requests email delivery for actionable events | Observer |
 | `InAppNotifier` | Reacts to status changes and requests SSE delivery to the PR author | Observer |
@@ -218,7 +218,7 @@ Browser → `POST /api/reviews/{id}/approve` → `ReviewController` → `ReviewF
 | `EmailChannel` | Delivers notification messages via JavaMailSender and Mailtrap SMTP | Bridge (implementor) |
 | `InAppChannel` | Delivers notification messages via SSE to a named user's open browser connection | Bridge (implementor) |
 | `WebSocketChannel` | Delivers notification messages via STOMP broadcast to `/topic/pr-updates` | Bridge (implementor) |
-| `SseEmitterRegistry` | Maintains a live map of username → SSE emitter; registers new connections and removes expired ones | (infrastructure) |
+| `SseEmitterRegistry` | Maintains a live map of username -> SSE emitter; registers new connections and removes expired ones | (infrastructure) |
 | `CommandHistory` | Manages an ordered stack of executed review commands; supports single-step undo | Command |
 | `ApproveCommand` | Encapsulates the approve action with its previous state; executable and undoable | Command |
 | `RejectCommand` | Encapsulates the request-changes action with its previous state; executable and undoable | Command |
