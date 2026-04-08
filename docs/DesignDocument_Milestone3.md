@@ -44,16 +44,16 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 ---
 
 ### Factory
-**Problem solved:** Callers that need a code checker should not need to know which strategy, adapters, or decorators to assemble for a given language.
+**Problem solved:** Callers that need a code checker should not need to know which strategy, adapters, decorators, or proxies to assemble for a given language.
 
-**How it is applied:** `CheckerFactory` exposes a single `createChecker(Language)` method. Internally it selects the right strategy, wraps it in the `StrategyCheckerAdapter`, and stacks the three decorator layers (Lint, Style, Security) on top. Callers receive a fully configured `CodeChecker` without ever referencing concrete implementation classes.
+**How it is applied:** `CheckerFactory` exposes a single `createChecker(Language)` method. Internally it selects the right strategy, wraps it in the `StrategyCheckerAdapter`, stacks the three decorator layers (Lint, Style, Security) on top, and finally wraps the entire pipeline in a `CachingCheckerProxy`. Callers receive a fully configured `CodeChecker` without ever referencing concrete implementation classes.
 
 ---
 
 ### Strategy
 **Problem solved:** Java, Python, and JavaScript code analysis require completely different backends (Checkstyle library, Pylint microservice, ESLint microservice). Switching between them based on language should not require conditional branching at the call site.
 
-**How it is applied:** `CheckStrategy` defines an `execute(code)` method. `JavaCheckStrategy` delegates to `CheckstyleAdapter`. `PythonCheckStrategy` makes an HTTP POST to the Python microservice on port 5001. `JSCheckStrategy` makes an HTTP POST to the JavaScript microservice on port 5002. All return standardized `CheckResult` objects. `CheckerFactory` selects the correct strategy; callers never see the difference.
+**How it is applied:** `CheckStrategy` defines an `execute(code)` method. `JavaCheckStrategy` delegates to `CheckstyleAdapter` for in-process analysis. `PythonCheckStrategy` and `JSCheckStrategy` both extend `RemoteCheckTemplate` (Template Method) and provide only their service URL and name -- the HTTP call logic is inherited. All strategies return standardized `CheckResult` objects. `CheckerFactory` selects the correct strategy; callers never see the difference.
 
 ---
 
@@ -114,9 +114,16 @@ Vericode implements seventeen Gang of Four design patterns. Each pattern was cho
 ---
 
 ### Template Method
-**Problem solved:** The PR review lifecycle follows a fixed skeleton of steps (load -> validate -> transition state -> save -> notify) that should not vary across different review actions.
+**Problem solved:** Python and JavaScript code analysis both follow the same HTTP-based algorithm: validate the input, build a JSON request, call an external microservice, and parse the violation response. Before Template Method, this entire algorithm was duplicated line-for-line in `PythonCheckStrategy` and `JSCheckStrategy`. Any change to the HTTP flow (e.g., adding a timeout header, changing error handling) had to be made in two places.
 
-**How it is applied:** `ReviewFacade` acts as the template, enforcing the invariant call sequence for every review action. The variable parts -- the specific state transition and command executed -- are supplied by the concrete `ReviewCommand` implementations. The skeleton is fixed; only the step implementations change.
+**How it is applied:** `RemoteCheckTemplate` is an abstract class that implements `CheckStrategy`. Its `execute()` method is declared `final` and defines the fixed skeleton: `validateInput` -> `callService` -> `parseViolations`. Each step is a `protected` method with a default implementation. Subclasses -- `PythonCheckStrategy` and `JSCheckStrategy` -- override only two abstract methods: `getServiceUrl()` and `getServiceName()`. The skeleton cannot be reordered or skipped by subclasses. `JavaCheckStrategy` does not extend this template because it runs Checkstyle in-process rather than over HTTP, so it remains a standalone `CheckStrategy` implementation.
+
+---
+
+### Proxy
+**Problem solved:** Every time a PR is submitted or re-checked, the full decorator pipeline runs from scratch -- including potentially expensive HTTP calls to the Python or JavaScript microservices. If the same code snippet is submitted twice (e.g., a page reload, or a user resubmitting without changes), the system wastes time re-running identical analysis.
+
+**How it is applied:** `CachingCheckerProxy` implements the `CodeChecker` interface and wraps the fully decorated checker returned by `CheckerFactory`. It maintains a `ConcurrentHashMap` keyed by the hash of the code string. On the first call for a given snippet, the proxy delegates to the real checker and caches the result. On subsequent calls with the same code, the cached result is returned immediately. Because the proxy implements `CodeChecker`, callers (like `PRController`) are completely unaware that caching is in play. The proxy is assembled inside `CheckerFactory.createChecker()` as the outermost wrapper.
 
 ---
 
@@ -210,7 +217,7 @@ Browser -> `POST /api/reviews/{id}/approve` -> `ReviewController` -> `ReviewFaca
 
 | Component | Purpose | Design Pattern(s) |
 |---|---|---|
-| `ReviewFacade` | Single entry point for all review operations; enforces load -> execute -> save -> notify ordering | Facade, Template Method |
+| `ReviewFacade` | Single entry point for all review operations; enforces load -> execute -> save -> notify ordering | Facade |
 | `NotificationService` | Fans out PR status changes to all registered observer instances | Observer |
 | `EmailNotifier` | Reacts to status changes and requests email delivery for actionable events | Observer |
 | `InAppNotifier` | Reacts to status changes and requests SSE delivery to the PR author | Observer |
@@ -224,8 +231,11 @@ Browser -> `POST /api/reviews/{id}/approve` -> `ReviewController` -> `ReviewFaca
 | `RejectCommand` | Encapsulates the request-changes action with its previous state; executable and undoable | Command |
 | `CommentCommand` | Encapsulates adding a comment; undo removes the last added comment | Command |
 | `DraftState`, `InReviewState`, `ChangesRequestedState`, `ApprovedState`, `MergedState` | Each state enforces which lifecycle transitions are valid and which are forbidden | State |
-| `CheckerFactory` | Creates a fully assembled, language-specific checker without exposing implementation details to callers | Factory |
-| `JavaCheckStrategy`, `PythonCheckStrategy`, `JSCheckStrategy` | Each implements language-specific static analysis (Checkstyle, Pylint HTTP, ESLint HTTP) | Strategy |
+| `CheckerFactory` | Creates a fully assembled, language-specific checker wrapped in a caching proxy; hides all implementation details from callers | Factory, Proxy |
+| `RemoteCheckTemplate` | Abstract class defining the fixed HTTP check skeleton (validate -> call service -> parse); subclasses provide only URL and service name | Template Method |
+| `PythonCheckStrategy`, `JSCheckStrategy` | Concrete subclasses of `RemoteCheckTemplate`; each provides the microservice URL and name | Template Method, Strategy |
+| `JavaCheckStrategy` | Standalone strategy for in-process Checkstyle analysis (does not use the remote template) | Strategy |
+| `CachingCheckerProxy` | Wraps a `CodeChecker` and caches results by code hash; avoids redundant microservice calls on identical submissions | Proxy |
 | `CheckstyleAdapter` | Wraps the Checkstyle library API to match the `CodeChecker` interface | Adapter |
 | `StrategyCheckerAdapter` | Adapts `CheckStrategy` to `CodeChecker` so strategies can be used in the decorator chain | Adapter |
 | `LintDecorator`, `StyleDecorator`, `SecurityDecorator` | Each adds one layer of analysis on top of the wrapped checker without modifying it | Decorator |
