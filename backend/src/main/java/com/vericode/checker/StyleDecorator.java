@@ -14,9 +14,13 @@ public class StyleDecorator extends CheckerDecorator {
     public CheckResult check(String code) {
         CheckResult result = super.check(code);
 
+        if (result.hasSyntaxError()) {
+            return result;
+        }
+
         String[] lines = code.split("\n");
         for (int i = 0; i < lines.length; i++) {
-            String line = lines[i];
+            String line = lines[i].stripTrailing();
 
             if (line.length() > 120) {
                 result.addViolation(new Violation(lineLengthRule.getCategory(),
@@ -26,11 +30,6 @@ public class StyleDecorator extends CheckerDecorator {
             if (line.contains("\t")) {
                 result.addViolation(new Violation(tabRule.getCategory(),
                         tabRule.getMessage(), i + 1, tabRule.getSeverity()));
-            }
-
-            if (!line.isEmpty() && line.endsWith(" ")) {
-                result.addViolation(new Violation(trailingRule.getCategory(),
-                        trailingRule.getMessage(), i + 1, trailingRule.getSeverity()));
             }
         }
 

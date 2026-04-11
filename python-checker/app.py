@@ -6,6 +6,7 @@ writes it to a temp file, runs Pylint, and returns violations as JSON.
 
 import json
 import os
+import re
 import tempfile
 import subprocess
 from flask import Flask, request, jsonify
@@ -63,11 +64,15 @@ def run_pylint(code):
             messages = pylint_output.get("messages", [])
 
             for msg in messages:
+                raw_msg = msg.get("message", "Unknown issue")
+                # Strip temp file references like (vericode_xxxxx, line N) or vericode_xxxxx.py
+                clean_msg = re.sub(r'\s*\(vericode_\w+(?:\.py)?,\s*line\s*\d+\)', '', raw_msg)
+                clean_msg = re.sub(r'vericode_\w+(?:\.py)?', '<code>', clean_msg)
                 violations.append({
                     "type": map_category(msg.get("type", "")),
-                    "message": msg.get("message", "Unknown issue"),
+                    "message": clean_msg,
                     "line": msg.get("line", 0),
-                    "severity": map_severity(msg.get("type", "")),
+                    "severity": map_severity(msg.get("type", ""), msg.get("symbol", "")),
                 })
 
     except subprocess.TimeoutExpired:
@@ -75,21 +80,21 @@ def run_pylint(code):
             "type": "SYSTEM",
             "message": "Pylint analysis timed out after 30 seconds",
             "line": 0,
-            "severity": "WARNING",
+            "severity": "ERROR",
         })
     except json.JSONDecodeError:
         violations.append({
             "type": "SYSTEM",
             "message": "Failed to parse Pylint output",
             "line": 0,
-            "severity": "WARNING",
+            "severity": "ERROR",
         })
     except Exception as e:
         violations.append({
             "type": "SYSTEM",
             "message": f"Pylint analysis failed: {str(e)}",
             "line": 0,
-            "severity": "WARNING",
+            "severity": "ERROR",
         })
     finally:
         if temp_path and os.path.exists(temp_path):
@@ -110,8 +115,12 @@ def map_category(pylint_type):
     return mapping.get(pylint_type, "LINT")
 
 
-def map_severity(pylint_type):
-    """Map Pylint message types to our severity levels."""
+def map_severity(pylint_type, symbol=""):
+    """Map Pylint message types to our severity levels.
+    Certain warning-level symbols are promoted to ERROR due to security impact."""
+    security_symbols = {"eval-used", "exec-used"}
+    if symbol in security_symbols:
+        return "ERROR"
     mapping = {
         "convention": "INFO",
         "refactor": "WARNING",

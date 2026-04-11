@@ -34,9 +34,12 @@ public class CheckstyleAdapter implements CodeChecker {
             tempFile = writeTempFile(code);
             List<Violation> violations = runCheckstyle(tempFile);
             result.addAll(violations);
+        } catch (CheckstyleException e) {
+            result.addViolation(new Violation("SYNTAX",
+                    "Java syntax error: code could not be parsed", 0, "ERROR"));
         } catch (Exception e) {
             result.addViolation(new Violation("SYSTEM",
-                    "Checkstyle analysis failed: " + e.getMessage(), 0, "WARNING"));
+                    "Checkstyle analysis failed: " + e.getMessage(), 0, "ERROR"));
         } finally {
             if (tempFile != null && tempFile.exists()) {
                 tempFile.delete();
@@ -115,8 +118,9 @@ public class CheckstyleAdapter implements CodeChecker {
 
         @Override
         public void addException(AuditEvent event, Throwable throwable) {
-            violations.add(new Violation("SYSTEM",
-                    "Checkstyle internal error: " + throwable.getMessage(), 0, "WARNING"));
+            violations.add(new Violation("SYNTAX",
+                    "Unable to parse file - possible syntax error: " + throwable.getMessage(),
+                    event.getLine(), "ERROR"));
         }
 
         private String mapSeverity(SeverityLevel level) {

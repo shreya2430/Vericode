@@ -44,7 +44,6 @@ public class CheckRulePool {
         register("SECURITY", "HardcodedPassword", "ERROR", "Possible hardcoded password");
         register("SECURITY", "HardcodedApiKey", "ERROR", "Possible hardcoded API key");
         register("SECURITY", "SqlInjection", "ERROR", "Possible SQL injection - use parameterized queries");
-        register("SECURITY", "EvalUsage", "ERROR", "Use of eval() is a security risk");
     }
 
     private static void registerStyleRules() {

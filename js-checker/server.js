@@ -32,7 +32,7 @@ app.post("/check", async (req, res) => {
                 type: "SYSTEM",
                 message: `ESLint analysis failed: ${err.message}`,
                 line: 0,
-                severity: "WARNING"
+                severity: "ERROR"
             }]
         });
     }
@@ -55,9 +55,15 @@ async function runESLint(code) {
 
         for (const result of results) {
             for (const msg of result.messages) {
+                let message = msg.message;
+                // Parse error messages from ESLint can include the source code after the
+                // error token — truncate to just the first line to keep messages clean
+                if (msg.fatal) {
+                    message = message.split('\n')[0].substring(0, 120).trim();
+                }
                 violations.push({
                     type: mapCategory(msg),
-                    message: msg.message,
+                    message: message,
                     line: msg.line || 0,
                     severity: mapSeverity(msg.severity),
                 });

@@ -40,4 +40,10 @@ public class CheckResult {
                 .filter(v -> "WARNING".equals(v.getSeverity()))
                 .count();
     }
+
+    public boolean hasSyntaxError() {
+        return violations.stream()
+                .anyMatch(v -> "SYNTAX".equals(v.getType()) ||
+                        ("SYSTEM".equals(v.getType()) && "ERROR".equals(v.getSeverity())));
+    }
 }
