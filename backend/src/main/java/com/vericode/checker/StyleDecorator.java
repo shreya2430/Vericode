@@ -18,18 +18,26 @@ public class StyleDecorator extends CheckerDecorator {
             return result;
         }
 
+        boolean lineTooLongFlagged = false;
+        boolean tabFlagged = false;
+
         String[] lines = code.split("\n");
         for (int i = 0; i < lines.length; i++) {
-            String line = lines[i].stripTrailing();
+            String raw = lines[i];
+            String stripped = raw.stripTrailing();
 
-            if (line.length() > 120) {
+            // Check raw length so genuine trailing whitespace counts toward line length
+            // Only report once — no need to repeat the same violation for every long line
+            if (!lineTooLongFlagged && raw.length() > 120) {
                 result.addViolation(new Violation(lineLengthRule.getCategory(),
                         lineLengthRule.getMessage(), i + 1, lineLengthRule.getSeverity()));
+                lineTooLongFlagged = true;
             }
 
-            if (line.contains("\t")) {
+            if (!tabFlagged && stripped.contains("\t")) {
                 result.addViolation(new Violation(tabRule.getCategory(),
                         tabRule.getMessage(), i + 1, tabRule.getSeverity()));
+                tabFlagged = true;
             }
         }
 

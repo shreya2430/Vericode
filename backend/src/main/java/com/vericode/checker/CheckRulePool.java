@@ -47,7 +47,7 @@ public class CheckRulePool {
     }
 
     private static void registerStyleRules() {
-        register("STYLE", "LineTooLong", "WARNING", "Line exceeds 120 characters");
+        register("STYLE", "LineTooLong", "WARNING", "Line too long - check for excessive spacing or indentation");
         register("STYLE", "TabCharacter", "WARNING", "Tab character found, use spaces");
         register("STYLE", "TrailingWhitespace", "INFO", "Trailing whitespace detected");
     }
