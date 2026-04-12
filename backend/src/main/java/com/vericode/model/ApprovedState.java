@@ -1,5 +1,21 @@
 package com.vericode.model;
 
+/**
+ * State Pattern: concrete state representing a PR that has passed review.
+ *
+ * WHY THIS EXISTS:
+ * An approved PR has one remaining action — merge it into the codebase.
+ * Re-approving or resubmitting makes no sense at this stage. The only
+ * exception is that a reviewer can still request changes even after approval
+ * if they catch something before the merge happens.
+ *
+ * VALID TRANSITIONS:
+ *   merge() → MERGED
+ *
+ * INVALID TRANSITIONS (all throw IllegalStateException):
+ *   submit(), approve(), requestChanges()
+ */
+
 public class ApprovedState implements PRState{
     @Override
     public void submit(PullRequest pr) {

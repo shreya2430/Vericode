@@ -1,5 +1,18 @@
 package com.vericode.service;
 
+/**
+ * Command Pattern: encapsulates the request-changes action as a reversible object.
+ *
+ * WHY THIS EXISTS:
+ * Requesting changes is treated as a reviewer action that can be undone, just
+ * like approval. The reviewer may have clicked the wrong button or changed their
+ * mind. This class snapshots previousStatus before calling requestChanges() so
+ * the PR can be fully restored if undo() is called.
+ *
+ * EXECUTE: snapshots current status → calls pr.getState().requestChanges(pr, reviewer)
+ * UNDO:    restores previousStatus → resets state to InReviewState
+ */
+
 import com.vericode.model.PRStatus;
 import com.vericode.model.PullRequest;
 import com.vericode.model.InReviewState;
