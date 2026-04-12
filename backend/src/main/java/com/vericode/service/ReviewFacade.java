@@ -67,6 +67,11 @@ public class ReviewFacade {
      */
     public ReviewActionResult approve(Long prId, String reviewer) {
         PullRequest pr = load(prId);
+
+        // Author cannot approve their own PR — this is a common rule in code review processes
+        if (pr.getAuthor().getUsername().equals(reviewer))
+            throw new IllegalStateException("Author cannot approve their own PR");
+
         ReviewCommand cmd = new ApproveCommand(pr, reviewer);
         cmd.execute();
         commandHistory.push(cmd);
@@ -81,6 +86,11 @@ public class ReviewFacade {
      */
     public ReviewActionResult requestChanges(Long prId, String reviewer) {
         PullRequest pr = load(prId);
+
+        // Author cannot request changes on their own PR — this is a common rule in code review processes
+        if (pr.getAuthor().getUsername().equals(reviewer))
+            throw new IllegalStateException("Author cannot request changes on their own PR");
+
         ReviewCommand cmd = new RejectCommand(pr, reviewer);
         cmd.execute();
         commandHistory.push(cmd);
@@ -95,6 +105,11 @@ public class ReviewFacade {
      */
     public ReviewActionResult merge(Long prId, String reviewer) {
         PullRequest pr = load(prId);
+
+        // Author cannot merge their own PR — this is a common rule in code review processes
+        if (pr.getAuthor().getUsername().equals(reviewer))
+            throw new IllegalStateException("Author cannot merge their own PR");
+
         pr.getState().merge(pr, reviewer);
         prRepo.save(pr);
         notificationService.notifyAll(pr);
