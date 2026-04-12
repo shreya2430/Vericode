@@ -1,5 +1,24 @@
 package com.vericode.service;
 
+/**
+ * Command Pattern: encapsulates the comment action as a reversible object.
+ *
+ * WHY THIS EXISTS:
+ * Comments are added to a Review object at a specific line number. Making this
+ * a Command means comments can be undone just like state transitions. On execute()
+ * a new Comment is added to the Review. On undo() the last comment is removed.
+ * This keeps the undo stack consistent — every action, including commenting, is
+ * reversible through the same mechanism.
+ *
+ * EXECUTE: creates a new Comment and adds it to the Review via addComment()
+ * UNDO:    removes the last comment added via removeLastComment()
+ *
+ * Note: commenting does not change PR status so notifyAll is intentionally
+ * skipped. The Facade's comment() method makes this explicit.
+ */
+
+
+
 import com.vericode.model.Comment;
 import com.vericode.model.PullRequest;
 import com.vericode.model.Review;

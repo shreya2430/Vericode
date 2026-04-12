@@ -1,5 +1,21 @@
 package com.vericode.model;
 
+/**
+ * State Pattern: concrete state representing a PR that has been sent back for fixes.
+ *
+ * WHY THIS EXISTS:
+ * When a reviewer requests changes, the author needs to fix the code and
+ * resubmit. The only valid action from this state is submit() which loops
+ * the PR back to IN_REVIEW. Approving or merging without resubmitting is
+ * not allowed — the reviewer must re-examine the updated code first.
+ *
+ * VALID TRANSITIONS:
+ *   submit() → IN_REVIEW
+ *
+ * INVALID TRANSITIONS (all throw IllegalStateException):
+ *   approve(), requestChanges(), merge()
+ */
+
 public class ChangesRequestedState implements PRState{
     @Override
     public void submit(PullRequest pr) {
