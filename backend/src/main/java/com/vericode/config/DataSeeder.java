@@ -31,11 +31,13 @@ public class DataSeeder implements CommandLineRunner {
 
         // Seed users
         User shreya = userRepository.save(new User("shreya", "Shreya Wanisha",
-                "shreya@example.com", passwordEncoder.encode("password123")));
+                "shreya@vericode.com", passwordEncoder.encode("password123")));
         User keya = userRepository.save(new User("keya", "Keya Goswami",
-                "keya@example.com", passwordEncoder.encode("password123")));
+                "keya@vericode.com", passwordEncoder.encode("password123")));
         User arundhati = userRepository.save(new User("arundhati", "Arundhati Bandopadhyaya",
-                "arundhati@example.com", passwordEncoder.encode("password123")));
+                "arundhati@vericode.com", passwordEncoder.encode("password123")));
+        User Maitro = userRepository.save(new User("maitri", "Maitri Mukesh Pasale",
+                "maitri@vericode.com", passwordEncoder.encode("password123")));
 
         // Seed PRs
         pullRequestRepository.save(new PullRequest(
