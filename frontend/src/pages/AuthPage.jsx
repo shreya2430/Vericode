@@ -101,8 +101,8 @@ function AuthPage() {
       }
     } catch (err) {
       const msg =
+        err?.response?.data?.error ||
         err?.response?.data?.message ||
-        err?.response?.data ||
         (mode === 'login' ? 'Invalid username or password.' : 'Registration failed. Please try again.');
       setError(typeof msg === 'string' ? msg : 'Something went wrong.');
     } finally {

@@ -139,6 +139,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .pr-detail__code-label {
@@ -181,6 +182,7 @@
   cursor: none;
   transition: background 0.1s ease;
   min-height: 24px;
+  min-width: max-content;
 }
 
 .code-line:hover {

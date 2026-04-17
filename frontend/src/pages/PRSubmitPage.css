@@ -151,6 +151,8 @@
   font-size: 0.85rem;
   line-height: 1.6;
   tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 /* Field error state */
