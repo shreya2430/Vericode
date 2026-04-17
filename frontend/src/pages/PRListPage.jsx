@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { prService } from '../services/prService';
 import PRList from '../components/PRList';
 import './PRListPage.css';
@@ -69,8 +70,11 @@ function PRListPage() {
   return (
     <div className="pr-list-page">
       <div className="pr-list-page__header">
-        <h1 className="pr-list-page__title">Pull Requests</h1>
-        <p className="pr-list-page__subtitle">All submitted pull requests</p>
+        <div>
+          <h1 className="pr-list-page__title">Pull Requests</h1>
+          <p className="pr-list-page__subtitle">All submitted pull requests</p>
+        </div>
+        <Link className="pr-list-page__create-btn" to="/submit">+ Create PR</Link>
       </div>
 
       <div className="pr-list-page__controls">

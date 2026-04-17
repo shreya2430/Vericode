@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // CommentThread: shows line-level comments on a PR and a form to add new ones.
 // Comments are kept in local React state (backend Review/Comment are not persisted to DB).
@@ -9,13 +9,14 @@ import { useState } from 'react';
 //   onAddComment  — called with (lineNumber: number, content: string)
 //   disabled      — disables the form (e.g. while a request is in flight)
 function CommentThread({ comments = [], lineCount, selectedLine, onAddComment, disabled }) {
-  const [lineInput, setLineInput] = useState('');
+  const [lineInput, setLineInput] = useState(selectedLine != null ? String(selectedLine) : '');
   const [content, setContent]     = useState('');
   const [error, setError]         = useState('');
   const [loading, setLoading]     = useState(false);
 
-  // Sync the line input when the parent updates selectedLine
-  // (using a key on the form handles this cleanly — see JSX below)
+  useEffect(() => {
+    if (selectedLine != null) setLineInput(String(selectedLine));
+  }, [selectedLine]);
 
   function validate() {
     const n = parseInt(lineInput, 10);
@@ -81,7 +82,7 @@ function CommentThread({ comments = [], lineCount, selectedLine, onAddComment, d
               type="number"
               min={1}
               max={lineCount || undefined}
-              value={lineInput !== '' ? lineInput : (selectedLine ?? '')}
+              value={lineInput}
               onChange={e => setLineInput(e.target.value)}
               placeholder="1"
               disabled={disabled || loading}
