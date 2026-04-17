@@ -148,7 +148,8 @@ public class ReviewFacade {
      * Throws IllegalStateException if history is empty.
      */
     public void undo() {
-        commandHistory.undo();
+        PullRequest pr = commandHistory.undo();
+        prRepo.save(pr);
     }
 
     /**
