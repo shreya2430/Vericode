@@ -1,5 +1,8 @@
 package com.vericode.service;
 
+import com.vericode.checker.CheckResult;
+import com.vericode.checker.CheckerFactory;
+import com.vericode.checker.CodeChecker;
 import com.vericode.model.PullRequest;
 import com.vericode.model.Review;
 import com.vericode.repository.PullRequestRepository;
@@ -71,6 +74,13 @@ public class ReviewFacade {
         // Author cannot approve their own PR — this is a common rule in code review processes
         if (pr.getAuthor().getUsername().equals(reviewer))
             throw new IllegalStateException("Author cannot approve their own PR");
+
+        // Block approval if pipeline has errors
+        CodeChecker checker = CheckerFactory.createChecker(pr.getLanguage());
+        CheckResult checkResult = checker.check(pr.getCodeSnippet());
+        if (!checkResult.isPassed()) {
+            throw new IllegalStateException("Pipeline failed. Fix all errors before approving.");
+        }
 
         ReviewCommand cmd = new ApproveCommand(pr, reviewer);
         cmd.execute();
