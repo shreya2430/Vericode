@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext';
 import { prService } from '../services/prService';
 import ReviewActions from '../components/ReviewActions';
 import CommentThread from '../components/CommentThread';
+import CheckResults from '../components/CheckResults';
 import './PRDetailPage.css';
 
 const STATUS_LABEL = {
@@ -47,16 +48,19 @@ function PRDetailPage() {
   const [comments, setComments]   = useState([]);   // local — not persisted by backend
   const [history, setHistory]     = useState([]);
   const [selectedLine, setSelectedLine] = useState(null);
+  const [checkData, setCheckData] = useState(null);
 
   useEffect(() => {
     Promise.all([
       prService.getById(id),
       prService.getHistory(),
+      prService.check(id),
     ])
-      .then(([prRes, histRes]) => {
+      .then(([prRes, histRes, checkRes]) => {
         setPr(prRes.data);
         setStatus(prRes.data.status);
         setHistory(histRes.data);
+        setCheckData(checkRes.data);
       })
       .catch(() => setError('Failed to load pull request.'))
       .finally(() => setLoading(false));
@@ -143,6 +147,16 @@ function PRDetailPage() {
               );
             })}
           </div>
+
+          {/* Check results below code */}
+          {checkData && (
+            <div className="pr-detail__checks">
+              <CheckResults
+                checkResult={checkData.checkResult}
+                checklist={checkData.reviewChecklist}
+              />
+            </div>
+          )}
         </div>
 
         {/* Right: actions + comments */}

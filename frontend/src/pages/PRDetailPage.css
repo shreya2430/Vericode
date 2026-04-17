@@ -131,6 +131,10 @@
   align-items: start;
 }
 
+.pr-detail__checks {
+  margin-top: 8px;
+}
+
 /* =====================
    Code panel (left)
    ===================== */

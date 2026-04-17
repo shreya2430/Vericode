@@ -133,6 +133,29 @@ public class PRController {
                         .body(Map.of("error", "Pull request not found with id: " + id)));
     }
 
+    // GET /api/pullrequests/{id}/check - Re-run checks on stored code
+    @GetMapping("/{id}/check")
+    public ResponseEntity<?> checkPullRequest(@PathVariable Long id) {
+        return pullRequestRepository.findById(id)
+                .map(pr -> {
+                    CodeChecker checker = CheckerFactory.createChecker(pr.getLanguage());
+                    CheckResult checkResult = checker.check(pr.getCodeSnippet());
+                    ReviewTemplate template = ReviewTemplateRegistry.getTemplate("STANDARD");
+
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("checkResult", Map.of(
+                            "passed", checkResult.isPassed(),
+                            "violations", checkResult.getViolations(),
+                            "errorCount", checkResult.getErrorCount(),
+                            "warningCount", checkResult.getWarningCount()
+                    ));
+                    response.put("reviewChecklist", template.getChecklistItems());
+                    return ResponseEntity.ok((Object) response);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Pull request not found with id: " + id)));
+    }
+
     // DELETE /api/pullrequests/{id} - Delete a PR
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePullRequest(@PathVariable Long id) {

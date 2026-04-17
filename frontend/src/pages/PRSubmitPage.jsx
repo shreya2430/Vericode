@@ -67,7 +67,6 @@ function PRSubmitPage() {
             <CheckResults
               checkResult={result.checkResult}
               checklist={result.reviewChecklist}
-              prId={result.pullRequest.id}
             />
           )}
           {!result && (

@@ -8,6 +8,7 @@ export const prService = {
   getById:  (id)   => api.get(`/pullrequests/${id}`),
   submit:   (data) => api.post('/pullrequests', data),
   delete:   (id)   => api.delete(`/pullrequests/${id}`),
+  check:    (id)   => api.get(`/pullrequests/${id}/check`),
 
   // ReviewController: /api/reviews
   submitForReview: (id)                          => api.post(`/reviews/${id}/submit`),

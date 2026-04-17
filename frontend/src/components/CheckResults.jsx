@@ -13,12 +13,7 @@ const TYPE_CLASS = {
   SECURITY: 'badge--security',
 };
 
-// CheckResults: displays automated check output for a newly submitted PR.
-// Props:
-//   checkResult  — { passed, violations, errorCount, warningCount }
-//   checklist    — string[] of review checklist items
-//   prId         — id of the created PR, used for the "View PR" link
-function CheckResults({ checkResult, checklist, prId }) {
+function CheckResults({ checkResult, checklist }) {
   const [checkedItems, setCheckedItems] = useState({});
 
   function toggleItem(i) {
