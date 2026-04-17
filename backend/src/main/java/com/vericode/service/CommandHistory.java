@@ -18,6 +18,7 @@ package com.vericode.service;
  * application restart — it is not persisted to the database.
  */
 
+import com.vericode.model.PullRequest;
 import org.springframework.stereotype.Component;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -31,8 +32,9 @@ public class CommandHistory {
         stack.push(cmd);
     }
 
-    public void undo() {
-        if (!stack.isEmpty()) stack.pop().undo();
+    public PullRequest undo() {
+        if (!stack.isEmpty())
+            return stack.pop().undo();
         else throw new IllegalStateException("Nothing to undo.");
     }
 

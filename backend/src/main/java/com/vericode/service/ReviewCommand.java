@@ -1,5 +1,7 @@
 package com.vericode.service;
 
+import com.vericode.model.PullRequest;
+
 /**
  * Command Pattern: defines the contract for all reversible reviewer actions.
  *
@@ -21,6 +23,6 @@ package com.vericode.service;
 
 public interface ReviewCommand {
     void execute();
-    void undo();
+    PullRequest undo();
     String getDescription();
 }

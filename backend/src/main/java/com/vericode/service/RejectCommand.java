@@ -34,9 +34,10 @@ public class RejectCommand implements ReviewCommand{
     }
 
     @Override
-    public void undo() {
+    public PullRequest undo() {
         pr.setStatus(previousStatus);
         pr.setState(new InReviewState());
+        return pr;
     }
 
     @Override

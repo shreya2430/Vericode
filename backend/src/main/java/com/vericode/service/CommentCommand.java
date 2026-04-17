@@ -45,8 +45,9 @@ public class CommentCommand implements ReviewCommand{
     }
 
     @Override
-    public void undo() {
+    public PullRequest undo() {
         review.removeLastComment();
+        return pr;
     }
 
     @Override
