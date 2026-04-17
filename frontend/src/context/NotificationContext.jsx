@@ -9,6 +9,7 @@ const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
+  const [lastPRUpdate, setLastPRUpdate]   = useState(null); // { prId, status }
   const { user } = useUser();
   const esRef = useRef(null);
   const stompRef = useRef(null);
@@ -49,6 +50,9 @@ export function NotificationProvider({ children }) {
         client.subscribe('/topic/pr-updates', (frame) => {
           const payload = JSON.parse(frame.body);
           addNotification(payload.message);
+          if (payload.prId != null && payload.status != null) {
+            setLastPRUpdate({ prId: payload.prId, status: payload.status });
+          }
         });
       },
     });
@@ -79,7 +83,7 @@ export function NotificationProvider({ children }) {
   }
 
   return (
-    <NotificationContext.Provider value={{ notifications, notify, dismiss }}>
+    <NotificationContext.Provider value={{ notifications, notify, dismiss, lastPRUpdate }}>
       {children}
     </NotificationContext.Provider>
   );

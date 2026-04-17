@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { useNotifications } from '../context/NotificationContext';
 import { prService } from '../services/prService';
 import ReviewActions from '../components/ReviewActions';
 import CommentThread from '../components/CommentThread';
@@ -37,9 +38,10 @@ function formatDate(dateStr) {
 }
 
 function PRDetailPage() {
-  const { id }     = useParams();
-  const { user }   = useUser();
-  const navigate   = useNavigate();
+  const { id }                   = useParams();
+  const { user }                 = useUser();
+  const navigate                 = useNavigate();
+  const { lastPRUpdate }         = useNotifications();
 
   const [pr, setPr]               = useState(null);
   const [status, setStatus]       = useState(null); // kept separate so actions can update it
@@ -65,6 +67,12 @@ function PRDetailPage() {
       .catch(() => setError('Failed to load pull request.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (lastPRUpdate && String(lastPRUpdate.prId) === String(id)) {
+      setStatus(lastPRUpdate.status);
+    }
+  }, [lastPRUpdate, id]);
 
   function handleStatusChange(newStatus) {
     setStatus(newStatus);

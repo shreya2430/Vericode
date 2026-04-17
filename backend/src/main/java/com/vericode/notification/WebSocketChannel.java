@@ -38,4 +38,9 @@ public class WebSocketChannel implements NotificationChannel {
         messagingTemplate.convertAndSend("/topic/pr-updates",
                 Map.of("subject", subject, "message", message));
     }
+
+    public void sendPRStatusUpdate(String subject, String message, Long prId, String status) {
+        messagingTemplate.convertAndSend("/topic/pr-updates",
+                Map.of("subject", subject, "message", message, "prId", prId, "status", status));
+    }
 }

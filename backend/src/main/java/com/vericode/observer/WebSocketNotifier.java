@@ -39,6 +39,6 @@ public class WebSocketNotifier implements PRStatusObserver {
                 pr.getAuthor().getName(),
                 pr.getStatus()
         );
-        webSocketChannel.send(null, subject, message);
+        webSocketChannel.sendPRStatusUpdate(subject, message, pr.getId(), pr.getStatus().name());
     }
 }
