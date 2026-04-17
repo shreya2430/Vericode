@@ -88,9 +88,6 @@ function CheckResults({ checkResult, checklist, prId }) {
 
       {/* CTA */}
       <div className="check-results__actions">
-        <Link className="check-results__view-btn" to={`/pr/${prId}`}>
-          View pull request
-        </Link>
         <Link className="check-results__list-link" to="/prs">
           Back to all PRs
         </Link>

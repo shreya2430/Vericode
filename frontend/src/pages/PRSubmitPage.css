@@ -232,6 +232,23 @@
   opacity: 0.5;
 }
 
+.pr-submit-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pr-submit-row .pr-submit-btn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.pr-submit-btn--secondary {
+  background: transparent;
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
 /* =====================
    CheckResults styles
    ===================== */

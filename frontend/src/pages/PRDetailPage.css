@@ -312,6 +312,31 @@
   opacity: 0.82;
 }
 
+.review-btn--delete {
+  background: transparent;
+  border-color: #e05252;
+  color: #e05252;
+}
+
+.review-btn--delete-cancel {
+  background: transparent;
+  border-color: var(--text-muted);
+  color: var(--text-muted);
+}
+
+.review-actions__delete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.review-actions__delete-confirm-text {
+  font-size: 0.85rem;
+  color: #e05252;
+}
+
 .review-actions__terminal {
   font-size: 0.85rem;
   color: var(--text-muted);

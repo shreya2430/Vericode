@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { prService } from '../services/prService';
 import ReviewActions from '../components/ReviewActions';
@@ -36,8 +36,9 @@ function formatDate(dateStr) {
 }
 
 function PRDetailPage() {
-  const { id }   = useParams();
-  const { user } = useUser();
+  const { id }     = useParams();
+  const { user }   = useUser();
+  const navigate   = useNavigate();
 
   const [pr, setPr]               = useState(null);
   const [status, setStatus]       = useState(null); // kept separate so actions can update it
@@ -152,6 +153,7 @@ function PRDetailPage() {
             onStatusChange={handleStatusChange}
             history={history}
             onUndo={handleUndo}
+            onDelete={() => navigate('/prs')}
           />
 
           <div className="pr-detail__divider" />

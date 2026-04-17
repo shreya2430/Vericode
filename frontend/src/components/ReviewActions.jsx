@@ -31,9 +31,10 @@ const BUTTON_CLASS = {
 //   onStatusChange — called with the new status string after a successful action
 //   history        — string[] of command history entries
 //   onUndo         — called after a successful undo
-function ReviewActions({ pr, reviewer, onStatusChange, history = [], onUndo }) {
-  const [loading, setLoading] = useState(null); // tracks which button is in flight
-  const [error, setError]     = useState(null);
+function ReviewActions({ pr, reviewer, onStatusChange, history = [], onUndo, onDelete }) {
+  const [loading, setLoading]   = useState(null); // tracks which button is in flight
+  const [error, setError]       = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const actions = ACTIONS[pr.status] ?? [];
 
@@ -58,6 +59,21 @@ function ReviewActions({ pr, reviewer, onStatusChange, history = [], onUndo }) {
     } catch (err) {
       const msg = err?.response?.data?.error || 'Action failed. Please try again.';
       setError(typeof msg === 'string' ? msg : 'Something went wrong.');
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function handleDelete() {
+    setError(null);
+    setLoading('delete');
+    try {
+      await prService.delete(pr.id);
+      onDelete();
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Delete failed. Please try again.';
+      setError(typeof msg === 'string' ? msg : 'Something went wrong.');
+      setConfirmDelete(false);
     } finally {
       setLoading(null);
     }
@@ -97,6 +113,36 @@ function ReviewActions({ pr, reviewer, onStatusChange, history = [], onUndo }) {
       ) : (
         <p className="review-actions__terminal">This PR has been merged.</p>
       )}
+
+      <div className="review-actions__delete">
+        {confirmDelete ? (
+          <>
+            <span className="review-actions__delete-confirm-text">Are you sure?</span>
+            <button
+              className="review-btn review-btn--delete"
+              onClick={handleDelete}
+              disabled={loading !== null}
+            >
+              {loading === 'delete' ? 'Deleting...' : 'Yes, delete'}
+            </button>
+            <button
+              className="review-btn review-btn--delete-cancel"
+              onClick={() => setConfirmDelete(false)}
+              disabled={loading !== null}
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            className="review-btn review-btn--delete"
+            onClick={() => setConfirmDelete(true)}
+            disabled={loading !== null}
+          >
+            Delete PR
+          </button>
+        )}
+      </div>
 
       {error && <p className="review-actions__error">{error}</p>}
 

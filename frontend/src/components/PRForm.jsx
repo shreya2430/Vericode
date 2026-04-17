@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const LANGUAGES = ['JAVA', 'PYTHON', 'JAVASCRIPT'];
 
@@ -25,13 +26,11 @@ function validate(form) {
 // Props:
 //   onSubmit(formData) — called with { title, description, language, codeSnippet }
 //   loading            — disables the submit button while the request is in flight
-function PRForm({ onSubmit, loading }) {
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    language: 'JAVA',
-    codeSnippet: '',
-  });
+const EMPTY_FORM = { title: '', description: '', language: 'JAVA', codeSnippet: '' };
+
+function PRForm({ onSubmit, loading, prId, onCreateAnother }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState(EMPTY_FORM);
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
 
@@ -131,9 +130,29 @@ function PRForm({ onSubmit, loading }) {
         )}
       </div>
 
-      <button className="pr-submit-btn" type="submit" disabled={loading}>
-        {loading ? 'Running checks...' : 'Submit pull request'}
-      </button>
+      {prId ? (
+        <div className="pr-submit-row">
+          <button className="pr-submit-btn" type="button" onClick={() => navigate(`/pr/${prId}`)}>
+            PR Review
+          </button>
+          <button
+            className="pr-submit-btn pr-submit-btn--secondary"
+            type="button"
+            onClick={() => {
+              setForm(EMPTY_FORM);
+              setFieldErrors({});
+              setTouched({});
+              onCreateAnother();
+            }}
+          >
+            Create another
+          </button>
+        </div>
+      ) : (
+        <button className="pr-submit-btn" type="submit" disabled={loading}>
+          {loading ? 'Running checks...' : 'Submit pull request'}
+        </button>
+      )}
     </form>
   );
 }

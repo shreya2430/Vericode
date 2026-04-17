@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '../context/UserContext';
+import { useNotifications } from '../context/NotificationContext';
 import { prService } from '../services/prService';
 import PRForm from '../components/PRForm';
 import CheckResults from '../components/CheckResults';
@@ -7,6 +8,7 @@ import './PRSubmitPage.css';
 
 function PRSubmitPage() {
   const { user } = useUser();
+  const { notify } = useNotifications();
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
   const [result, setResult]     = useState(null); // { pullRequest, checkResult, reviewChecklist }
@@ -17,6 +19,7 @@ function PRSubmitPage() {
     try {
       const res = await prService.submit({ ...formData, authorId: user.id });
       setResult(res.data);
+      notify('PR submitted, ready for review!');
       // Scroll results into view on small screens
       setTimeout(() => {
         document.getElementById('check-results-anchor')?.scrollIntoView({ behavior: 'smooth' });
@@ -45,7 +48,12 @@ function PRSubmitPage() {
             </p>
           </div>
 
-          <PRForm onSubmit={handleSubmit} loading={loading} />
+          <PRForm
+            onSubmit={handleSubmit}
+            loading={loading}
+            prId={result?.pullRequest?.id}
+            onCreateAnother={() => setResult(null)}
+          />
 
           {error && (
             <p className="submit-page__error">{error}</p>
